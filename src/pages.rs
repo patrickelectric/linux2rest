@@ -1,6 +1,6 @@
 use actix_web::{web, App, HttpRequest, HttpResponse, HttpServer, Responder};
 
-use rscam::{Camera, Control};
+use rscam::{Camera, Control, CtrlData, Settable};
 use serde;
 use serde_json::json;
 use std::{fs, mem};
@@ -14,6 +14,12 @@ pub struct CameraIntervalRequest {
     camera: String,
     fourcc: [u8; 4],
     resolution: (u32, u32),
+}
+
+#[derive(Debug, serde::Deserialize, serde::Serialize)]
+pub struct ConfigureCamera {
+    camera: String,
+    control: Control,
 }
 
 pub fn interval(_req: HttpRequest, json: web::Json<CameraIntervalRequest>) -> impl Responder {
@@ -85,6 +91,45 @@ pub fn v4l_page(_req: HttpRequest) -> impl Responder {
     serde_json::to_string_pretty(&main_json)
 }
 
-pub fn control(req: HttpRequest, json: web::Json<Control>) -> impl Responder {
-    print!("post: {:#?}", json)
+
+pub fn control(req: HttpRequest, json: web::Json<ConfigureCamera>) {
+    let configuration = json.into_inner();
+    let camera = Camera::new(&configuration.camera).unwrap();
+
+    let value = match &configuration.control.data {
+        CtrlData::Integer {
+            value,
+            ..
+        } => Settable::unify(value),
+        CtrlData::Boolean {
+            value,
+            ..
+        } => Settable::unify(value),
+        CtrlData::Menu {
+            value,
+            ..
+        } => Settable::unify(value),
+        CtrlData::Integer64 {
+            value,
+            ..
+        } => Settable::unify(value),
+        CtrlData::String {
+            value,
+            ..
+        } => Settable::unify(value),
+        CtrlData::Bitmask {
+            value,
+            ..
+        } => Settable::unify(value),
+        CtrlData::IntegerMenu {
+            value,
+            ..
+        } => Settable::unify(value),
+        _ => {
+            print!("Invalid control data type: {:#?}", configuration.control.data);
+            return;
+        }
+    };
+
+    camera.set_control(configuration.control.id, &value);
 }

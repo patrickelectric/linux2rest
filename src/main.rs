@@ -35,7 +35,7 @@ fn main() {
         App::new()
             .route("/", web::get().to(pages::root_page))
             .route("/v4l", web::get().to(pages::v4l_page))
-            //.route("/v4l", web::post().to(pages::control))
+            .route("/v4l", web::post().to(pages::control))
             .route("/v4l/interval", web::get().to(pages::interval))
     })
     .bind(server_string)
