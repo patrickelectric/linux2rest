@@ -17,9 +17,22 @@ pub struct CameraIntervalRequest {
 }
 
 #[derive(Debug, serde::Deserialize, serde::Serialize)]
+pub enum Value {
+    Integer(i64),
+    Bool(bool),
+    String(String),
+}
+
+#[derive(Debug, serde::Deserialize, serde::Serialize)]
+pub struct ControlValue {
+    id: u32,
+    value: Value,
+}
+
+#[derive(Debug, serde::Deserialize, serde::Serialize)]
 pub struct ConfigureCamera {
     camera: String,
-    control: Control,
+    control: ControlValue
 }
 
 pub fn interval(_req: HttpRequest, json: web::Json<CameraIntervalRequest>) -> impl Responder {
@@ -96,39 +109,16 @@ pub fn control(req: HttpRequest, json: web::Json<ConfigureCamera>) {
     let configuration = json.into_inner();
     let camera = Camera::new(&configuration.camera).unwrap();
 
-    let value = match &configuration.control.data {
-        CtrlData::Integer {
-            value,
-            ..
-        } => Settable::unify(value),
-        CtrlData::Boolean {
-            value,
-            ..
-        } => Settable::unify(value),
-        CtrlData::Menu {
-            value,
-            ..
-        } => Settable::unify(value),
-        CtrlData::Integer64 {
-            value,
-            ..
-        } => Settable::unify(value),
-        CtrlData::String {
-            value,
-            ..
-        } => Settable::unify(value),
-        CtrlData::Bitmask {
-            value,
-            ..
-        } => Settable::unify(value),
-        CtrlData::IntegerMenu {
-            value,
-            ..
-        } => Settable::unify(value),
-        _ => {
-            print!("Invalid control data type: {:#?}", configuration.control.data);
-            return;
-        }
+    let value = match &configuration.control.value {
+        Value::Integer(value) => {
+            Settable::unify(value)
+        },
+        Value::Bool(value) => {
+            Settable::unify(value)
+        },
+        Value::String(value) => {
+            Settable::unify(value)
+        },
     };
 
     camera.set_control(configuration.control.id, &value);
