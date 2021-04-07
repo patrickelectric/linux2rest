@@ -24,13 +24,13 @@ pub fn generate_serde_value(system_type: SystemType) {
             }
         }
 
+        /*
         Cpu => {
             system.refresh_cpu();
             for component in system.get_() {
                 println!("{:#?}", component);
             }
-        }
-
+        }*/
         Networks => {
             system.refresh_networks();
             system.refresh_networks_list();
