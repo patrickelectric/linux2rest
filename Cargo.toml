@@ -15,6 +15,7 @@ structopt = { version = "0.3", default-features = false }
 
 #Features
 udev = "0.6"
+sysinfo = "0.16"
 
 [build-dependencies]
 vergen = {version = "4", default-features = false, features = ["build", "git"]}
