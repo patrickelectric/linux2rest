@@ -1,0 +1,295 @@
+<html>
+  <head>
+    <title>System Information</title>
+    <style>
+      .tab-button {
+        padding: 6px 10px;
+        border-top-left-radius: 3px;
+        border-top-right-radius: 3px;
+        border: 1px solid #ccc;
+        cursor: pointer;
+        background: #f0f0f0;
+        margin-bottom: -1px;
+        margin-right: -1px;
+      }
+      .tab-button:hover {
+        background: #e0e0e0;
+      }
+      .tab-button.active {
+        background: #e0e0e0;
+      }
+      .tab {
+        border: 1px solid #ccc;
+        padding: 10px;
+      }
+
+      #pretty th {
+        padding-top: 11px;
+        padding-bottom: 11px;
+        background-color: #007acc;
+        color: white;
+        text-align: left;
+      }
+
+      td,
+      th {
+        border: 1px solid #ddd;
+        text-align: left;
+        padding: 8px;
+      }
+
+      table {
+        font-size: 16px;
+        font-family: "Trebuchet MS", Arial, Helvetica, sans-serif;
+        border-collapse: collapse;
+        border-spacing: 0;
+        width: 100%;
+      }
+
+      tr:nth-child(even) {
+        background-color: #93d0f0;
+      }
+    </style>
+  </head>
+  <body>
+    <div id="app" class="demo">
+      <button
+        v-for="tab in tabs"
+        v-bind:key="tab"
+        v-bind:class="['tab-button', { active: current_tab === tab }]"
+        v-on:click="current_tab = tab"
+      >
+        {{ tab }}
+      </button>
+
+      <component v-bind:is="currentTabComponent" class="tab"></component>
+    </div>
+    <script src="vue.js"></script>
+    <script>
+      // Cache to be used between modules
+      const cache = {};
+
+      const rest_address = `${location.protocol}//${location.hostname}${
+        location.port ? ":" + location.port : ""
+      }`;
+      const request = async function(name) {
+        const response_content = await fetch(`${rest_address}/${name}`);
+        return await response_content.json();
+      };
+
+      const app = Vue.createApp({
+        mounted: function() {},
+        methods: {},
+        data: function() {
+          return {
+            tabs: ["netstat", "system", "udev"],
+            current_tab: "system",
+          };
+        },
+        computed: {
+          currentTabComponent: function() {
+            return "tab-" + this.current_tab;
+          },
+        },
+      });
+
+      app.component("tab-netstat", {
+        created() {
+          const content = cache["netstat"];
+          if (content) {
+            this.data = content;
+            return;
+          }
+
+          this.updateData();
+        },
+        methods: {
+          updateData: async function() {
+            this.data = "loading.."
+            this.data = await request("netstat");
+            cache["netstat"] = this.data;
+          },
+        },
+        data: function() {
+          return {
+            data: "loading..",
+          };
+        },
+        template: `
+          <button v-on:click="updateData()">Update</button>
+          <div style="display: flex; column-gap: 1em">
+          <div style="width:50%">
+          <h3>TCP</h3>
+          <table style="width:100%">
+            <tr>
+              <th>PIDS</th>
+              <th>State</th>
+              <th>Local</th>
+              <th>Remote</th>
+            </tr>
+            <tr v-for="tcp in data.tcp">
+              <td>{{tcp.pids}}</td>
+              <td>{{tcp.state}}</td>
+              <td>{{tcp.local.address}}:{{tcp.local.port}}</td>
+              <td>{{tcp.remote.address}}:{{tcp.remote.port}}</td>
+            </tr>
+          </table>
+          </div>
+
+          <div style="width:50%">
+          <h3>UDP</h3>
+          <table style="width:100%">
+            <tr>
+              <th>PIDS</th>
+              <th>Local</th>
+            </tr>
+            <tr v-for="udp in data.udp">
+              <td>{{udp.pids}}</td>
+              <td>{{udp.local.address}}:{{udp.local.port}}</td>
+            </tr>
+          </table>
+          </div>
+          </div>`,
+      });
+
+      app.component("tab-system", {
+        created() {
+          const content = cache["system"];
+          if (content) {
+            this.data = content;
+            return;
+          }
+
+          this.updateData();
+        },
+        methods: {
+          updateData: async function() {
+            this.data = "loading.."
+            this.data = await request("system");
+            cache["system"] = this.data;
+          },
+        },
+        data: function() {
+          return {
+            data: "loading..",
+          };
+        },
+        template: `
+          <button v-on:click="updateData()">Update</button>
+          <div v-if="data.info">
+            <h3>Info</h3>
+            Host name: {{data.info.host_name}}<br>
+            Kernel version: {{data.info.kernel_version}}<br>
+            OS version: {{data.info.os_version}}<br>
+            OS name: {{data.info.system_name}} {{data.info.system_name.includes("Arch") ? "(I use Arch BTW)" : ""}}<br>
+          </div>
+
+          <div style="display: flex; column-gap: 1em">
+            <div v-if="data.cpu">
+              <h3 v-if="data.cpu">CPU {{data.cpu[0].brand}}</h3>
+              <div v-for="cpu in data.cpu" style="display: flex; column-gap: 1em">
+                <div>
+                  {{cpu.name}}
+                </div>
+                <div>
+                  {{(Math.round(cpu.frequency)/1000).toFixed(2)}}GHz
+                </div>
+                <div>
+                  {{Math.round(cpu.usage)}}%
+                </div>
+              </div>
+            </div>
+
+            <div v-if="data.memory">
+              <h3>Memory</h3>
+              <h4>RAM</h4>
+                Space (Used / Total | %): {{(data.memory.ram.used_kB / Math.pow(2, 10)).toFixed(2)}}MB / {{(data.memory.ram.total_kB / Math.pow(2, 10)).toFixed(2)}}MB | {{(100*data.memory.ram.used_kB/data.memory.ram.total_kB).toFixed(2)}}%<br>
+              <h4>Swap</h4>
+                Space (Used / Total | %): {{(data.memory.swap.used_kB / Math.pow(2, 10)).toFixed(2)}}MB / {{(data.memory.swap.total_kB / Math.pow(2, 10)).toFixed(2)}}MB | {{(100*data.memory.swap.used_kB/data.memory.swap.total_kB).toFixed(2)}}%<br>
+            </div>
+
+            <div v-if="data.disk">
+              <h3>Disks</h3>
+              <div v-for="disk in data.disk">
+                <h4>{{disk.name}}</h4>
+                Type: {{disk.type}}<br>
+                Mount point: {{disk.mount_point}}<br>
+                Filesystem: {{disk.filesystem_type}}<br>
+                Space (Free / Total | %): {{(disk.available_space_B / Math.pow(2, 30)).toFixed(2)}}GB / {{(disk.total_space_B / Math.pow(2, 30)).toFixed(2)}}GB | {{(100 - 100*disk.available_space_B/disk.total_space_B).toFixed(2)}}%<br>
+              </div>
+            </div>
+
+            <div v-if="data.network">
+              <h3>Network</h3>
+              <div style="display: flex; column-gap: 1em">
+                <div v-for="network in data.network">
+                  <h4>{{network.name}}</h4>
+                  <div v-for="what in ['received', 'transmitted']">
+                  <h5>{{what.charAt(0).toUpperCase() + what.slice(1)}}:</h5>
+                  Errors: {{network["errors_on_" + what]}}<br>
+                  Packets: {{network["packets_" + what]}}<br>
+                  {{what}}: {{Math.round(network[what + "_B"]/1024)}} kB<br>
+                  Total errors: {{network["total_errors_on_" + what]}}<br>
+                  Total packets: {{network["total_packets_" + what]}}<br>
+                  Total {{what}}: {{(Math.round(network["total_" + what + "_B"]/1024))}} kB<br>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <table style="width:100%" v-if="data.process">
+            <tr>
+              <th style="min-width: 9em">PID / Parent</th>
+              <th style="min-width: 5em">CPU (%)</th>
+              <th style="min-width: 5em">MEM (%)</th>
+              <th>Status</th>
+              <th>Command</th>
+            </tr>
+            <tr v-for="process in data.process">
+              <td>{{process.pid}}{{process.parent_process ? " / " + process.parent_process : ""}}</td>
+              <td>{{process.cpu_usage.toFixed(2)}} %</td>
+              <td>{{(100*process.used_memory_kB/data.memory.ram.used_kB).toFixed(2)}} %</td>
+              <td>{{process.status}}</td>
+              <td>{{process.command.join(" ")}}</td>
+            </tr>
+          </table>
+
+          <pre>
+            {{data}}
+          </pre>`,
+      });
+
+      app.component("tab-udev", {
+        created() {
+          const content = cache["udev"];
+          if (content) {
+            this.data = content;
+            return;
+          }
+
+          this.updateData();
+        },
+        methods: {
+          updateData: async function() {
+            this.data = "loading.."
+            this.data = await request("udev");
+            cache["udev"] = this.data;
+          },
+        },
+        data: function() {
+          return {
+            data: "loading..",
+          };
+        },
+        template: `
+          <button v-on:click="updateData()">Update</button>
+          <pre>
+            {{data}}
+          </pre>`,
+      });
+
+      app.mount("#app");
+    </script>
+  </body>
+</html>

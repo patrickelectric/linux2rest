@@ -1,4 +1,4 @@
-use actix_web::{web, HttpRequest, HttpResponse};
+use actix_web::{HttpRequest, HttpResponse};
 use log::*;
 
 use crate::features;
@@ -15,22 +15,16 @@ pub fn load_file(file_name: &str) -> String {
     }
 
     match file_name {
-        "" | "index.html" => r#"std::include_str!("../html/index.html").into()"#.into(),
-        "vue.js" => r#"std::include_str!("../html/vue.js").into()"#.into(),
+        "" | "index.html" => std::include_str!("../html/index.html").into(),
+        "vue.js" => std::include_str!("../html/vue.js").into(),
         _ => format!("File not found: {}", file_name),
     }
 }
 
 pub fn root(req: HttpRequest) -> HttpResponse {
     let path = match req.match_info().query("filename") {
-        "" | "index.html" => load_file("index.html"),
-        "vue.js" => load_file("vue.js"),
-        something => {
-            //TODO: do that in load_file
-            return HttpResponse::NotFound()
-                .content_type("text/plain")
-                .body(format!("Page does not exist: {}", something));
-        }
+        "" => load_file("index.html"),
+        file => load_file(file),
     };
     HttpResponse::Ok().content_type("text/html").body(path)
 }

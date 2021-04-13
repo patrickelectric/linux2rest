@@ -11,7 +11,10 @@ pub fn run(server_address: &str) {
     HttpServer::new(|| {
         App::new()
             .route("/", web::get().to(pages::root))
-            .route(r"/{filename:.*(\.html|\.js)}", web::get().to(pages::root))
+            .route(
+                r"/{filename:.*(\.html|\.js|\.css)}",
+                web::get().to(pages::root),
+            )
             .route("/netstat", web::get().to(pages::netstat))
             .route("/system", web::get().to(pages::system))
             .route("/udev", web::get().to(pages::udev))

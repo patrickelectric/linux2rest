@@ -4,8 +4,10 @@ extern crate lazy_static;
 mod cli;
 mod features;
 mod logger;
+mod server;
 
 fn main() {
     logger::init();
-    features::udev::generate_serde_value();
+
+    server::run("0.0.0.0:1234")
 }
