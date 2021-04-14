@@ -253,6 +253,7 @@
 
           <table style="width:100%" v-if="data.process">
             <tr>
+              <th>Name</th>
               <th style="min-width: 9em">PID / Parent</th>
               <th style="min-width: 5em">CPU (%)</th>
               <th style="min-width: 5em">MEM (%)</th>
@@ -260,6 +261,7 @@
               <th>Command</th>
             </tr>
             <tr v-for="process in data.process">
+              <td>{{process.name}}</td>
               <td>{{process.pid}}{{process.parent_process ? " / " + process.parent_process : ""}}</td>
               <td>{{process.cpu_usage.toFixed(2)}} %</td>
               <td>{{(100*process.used_memory_kB/data.memory.ram.used_kB).toFixed(2)}} %</td>
