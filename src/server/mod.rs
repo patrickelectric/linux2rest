@@ -16,6 +16,7 @@ pub fn run(server_address: &str) {
                 web::get().to(pages::root),
             )
             .route("/netstat", web::get().to(pages::netstat))
+            .route("/raspberry", web::get().to(pages::raspberry))
             .route("/system", web::get().to(pages::system))
             .route("/udev", web::get().to(pages::udev))
     })

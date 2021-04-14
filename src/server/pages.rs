@@ -55,3 +55,11 @@ pub fn udev(req: HttpRequest) -> HttpResponse {
         .content_type("application/json")
         .body(serde_json::to_string_pretty(&features::udev::generate_serde_value()).unwrap())
 }
+
+pub fn raspberry(req: HttpRequest) -> HttpResponse {
+    debug!("{:#?}", req);
+
+    HttpResponse::Ok()
+        .content_type("application/json")
+        .body(serde_json::to_string_pretty(&features::raspberry::generate_serde_value()).unwrap())
+}
