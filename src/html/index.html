@@ -176,12 +176,25 @@
         },
         template: `
           <button v-on:click="updateData()">Update</button>
-          <div v-if="data.info">
-            <h3>Info</h3>
-            Host name: {{data.info.host_name}}<br>
-            Kernel version: {{data.info.kernel_version}}<br>
-            OS version: {{data.info.os_version}}<br>
-            OS name: {{data.info.system_name}} {{data.info.system_name.includes("Arch") ? "(I use Arch BTW)" : ""}}<br>
+          <div v-if="data.info && data.temperature" style="display: flex; column-gap: 1em">
+            <div>
+              <h3>Info</h3>
+              Host name: {{data.info.host_name}}<br>
+              Kernel version: {{data.info.kernel_version}}<br>
+              OS version: {{data.info.os_version}}<br>
+              OS name: {{data.info.system_name}} {{data.info.system_name.includes("Arch") ? "(I use Arch BTW)" : ""}}<br>
+            </div>
+            <div>
+              <h3>Temperature</h3>
+              <div style="display: flex; column-gap: 1em">
+                <div v-for="sensor in data.temperature">
+                  <h4>{{sensor.name}}</h4>
+                  Temperature: {{sensor.temperature.toFixed(2)}} ºC<br>
+                  Maximum temp: {{sensor.maximum_temperature ? sensor.maximum_temperature.toFixed(2) + " ºC" : "Unknown"}}<br>
+                  Critical temp: {{sensor.critical_temperature ? sensor.critical_temperature.toFixed(2) + " ºC" : "Unknown"}}<br>
+                </div>
+              </div>
+            </div>
           </div>
 
           <div style="display: flex; column-gap: 1em">
