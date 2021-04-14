@@ -17,7 +17,7 @@ structopt = { version = "0.3", default-features = false }
 #Features
 netstat2 = "0.9"
 udev = "0.6"
-sysinfo = "0.16"
+sysinfo = { git = "https://github.com/GuillaumeGomez/sysinfo", branch="master" }
 
 [build-dependencies]
 reqwest = {version = "0.11", features = ["blocking"]}
