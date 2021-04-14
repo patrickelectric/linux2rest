@@ -237,6 +237,9 @@
               <div style="display: flex; column-gap: 1em">
                 <div v-for="network in data.network">
                   <h4>{{network.name}}</h4>
+                  Description: {{network.description ? network.description : "None"}}<br>
+                  IPs: {{network.ips}}<br>
+                  MAC: {{network.mac}}<br>
                   <div v-for="what in ['received', 'transmitted']">
                   <h5>{{what.charAt(0).toUpperCase() + what.slice(1)}}:</h5>
                   Errors: {{network["errors_on_" + what]}}<br>

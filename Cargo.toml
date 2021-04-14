@@ -16,6 +16,7 @@ structopt = { version = "0.3", default-features = false }
 
 #Features
 netstat2 = "0.9"
+pnet = "0.27.2"
 udev = "0.6"
 sysinfo = { git = "https://github.com/GuillaumeGomez/sysinfo", branch="master" }
 

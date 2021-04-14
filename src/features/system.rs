@@ -1,5 +1,6 @@
 use std::sync::{Arc, Mutex};
 
+use pnet;
 use serde::{
     ser::{SerializeMap, SerializeSeq, SerializeStruct},
     Serialize, Serializer,
@@ -125,12 +126,37 @@ pub fn generate_serde_value(system_type: SystemType) -> serde_json::Value {
             system.refresh_networks();
             system.refresh_networks_list();
 
+            let pnet_interfaces = pnet::datalink::interfaces();
+
             let networks = system
                 .get_networks()
                 .iter()
                 .map(|(name, network)| {
+                    let mut pnet_interface = pnet::datalink::NetworkInterface {
+                        name: Default::default(),
+                        description: Default::default(),
+                        index: Default::default(),
+                        mac: Default::default(),
+                        ips: Default::default(),
+                        flags: Default::default(),
+                    };
+
+                    if let Some(interface) = pnet_interfaces
+                        .iter()
+                        .find(|interface| &interface.name == name)
+                    {
+                        pnet_interface = interface.clone();
+                    }
+
                     serde_json::json!({
                         "name": name,
+                        "description": pnet_interface.description,
+
+                        "mac": pnet_interface.mac.unwrap_or(pnet::datalink::MacAddr::zero()).to_string(),
+                        "ips": pnet_interface.ips,
+
+                        "is_up": pnet_interface.is_up(),
+                        "is_loopback": pnet_interface.is_loopback(),
 
                         "received_B": network.get_received(),
                         "total_received_B": network.get_total_received(),
