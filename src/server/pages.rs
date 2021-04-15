@@ -1,5 +1,6 @@
-use actix_web::{HttpRequest, HttpResponse};
+use actix_web::{web, HttpRequest, HttpResponse};
 use log::*;
+use serde::Deserialize;
 
 use crate::features;
 
@@ -27,6 +28,26 @@ pub fn root(req: HttpRequest) -> HttpResponse {
         file => load_file(file),
     };
     HttpResponse::Ok().content_type("text/html").body(path)
+}
+
+#[derive(Deserialize)]
+pub struct KernelBufferQuery {
+    start: Option<u64>,
+    size: Option<u64>,
+}
+
+pub fn kernel_buffer(req: HttpRequest, query: web::Query<KernelBufferQuery>) -> HttpResponse {
+    debug!("{:#?}", req);
+
+    let query = query.into_inner();
+
+    HttpResponse::Ok().content_type("application/json").body(
+        serde_json::to_string_pretty(&features::kernel_buffer::generate_serde_value(
+            query.start,
+            query.size,
+        ))
+        .unwrap(),
+    )
 }
 
 pub fn netstat(req: HttpRequest) -> HttpResponse {

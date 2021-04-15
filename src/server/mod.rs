@@ -15,6 +15,7 @@ pub fn run(server_address: &str) {
                 r"/{filename:.*(\.html|\.js|\.css)}",
                 web::get().to(pages::root),
             )
+            .route("/kernel_buffer", web::get().to(pages::kernel_buffer))
             .route("/netstat", web::get().to(pages::netstat))
             .route("/raspberry", web::get().to(pages::raspberry))
             .route("/system", web::get().to(pages::system))

@@ -17,6 +17,7 @@ structopt = { version = "0.3", default-features = false }
 #Features
 netstat2 = "0.9"
 pnet = "0.27.2"
+rmesg = { version = "1.0.14", features = ["extra-traits"] }
 rppal = "0.11.3"
 udev = "0.6"
 sysinfo = { git = "https://github.com/GuillaumeGomez/sysinfo", branch="master" }
