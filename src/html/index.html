@@ -49,6 +49,14 @@
       tr:nth-child(even) {
         background-color: #93d0f0;
       }
+
+      .dmesg {
+        margin: 0;
+      }
+
+      span.toggle {
+        cursor: pointer;
+      }
     </style>
   </head>
   <body>
@@ -72,6 +80,11 @@
       const rest_address = `${location.protocol}//${location.hostname}${
         location.port ? ":" + location.port : ""
       }`;
+
+      const ws_address = `${location.protocol == "https:" ? "wss:" : "ws:"}//${
+        location.hostname
+      }${location.port ? ":" + location.port : ""}/ws`;
+
       const request = async function(name) {
         const response_content = await fetch(`${rest_address}/${name}`);
         return await response_content.json();
@@ -82,7 +95,7 @@
         methods: {},
         data: function() {
           return {
-            tabs: ["netstat", "system", "udev"],
+            tabs: ["netstat", "system", "udev", "kernel"],
             current_tab: "system",
           };
         },
@@ -105,7 +118,7 @@
         },
         methods: {
           updateData: async function() {
-            this.data = "loading.."
+            this.data = "loading..";
             this.data = await request("netstat");
             cache["netstat"] = this.data;
           },
@@ -164,7 +177,7 @@
         },
         methods: {
           updateData: async function() {
-            this.data = "loading.."
+            this.data = "loading..";
             this.data = await request("system");
             cache["system"] = this.data;
           },
@@ -278,6 +291,36 @@
           </pre>`,
       });
 
+      app.component("tab-udev-tree", {
+        props: ["item"],
+        methods: {
+          toggle: function() {
+            this.open = !this.open;
+          },
+        },
+        computed: {
+          pretty_json: function() {
+            const item = Object.assign({}, this.item);
+            delete item["parent"];
+            return JSON.stringify(item, undefined, 2);
+          },
+        },
+        data: function() {
+          return {
+            open: false,
+          };
+        },
+        template: `
+          <ul>
+            <a @click="toggle()">
+              <span class="toggle" span>{{open ? "🗁" : "🗀"}}</span> {{item.system_path}}
+            </a>
+            <pre v-if="item && item.system_path && open">{{pretty_json}}</pre>
+            <tab-udev-tree v-if="item.parent" :item="item.parent"/>
+          </ul>
+          `,
+      });
+
       app.component("tab-udev", {
         created() {
           const content = cache["udev"];
@@ -290,7 +333,7 @@
         },
         methods: {
           updateData: async function() {
-            this.data = "loading.."
+            this.data = "loading..";
             this.data = await request("udev");
             cache["udev"] = this.data;
           },
@@ -302,9 +345,60 @@
         },
         template: `
           <button v-on:click="updateData()">Update</button>
-          <pre>
-            {{data}}
-          </pre>`,
+          <tab-udev-tree v-for="item in data" :item="item"/>
+        `,
+      });
+
+      app.component("tab-kernel", {
+        created() {
+          const content = cache["kernel"];
+          if (content) {
+            this.data = content;
+            return;
+          }
+
+          this.initWebsocket();
+        },
+        methods: {
+          initWebsocket: async function() {
+            this.socket = new WebSocket(ws_address + "/kernel_buffer");
+            this.socket.onmessage = (message) => {
+              this.data.push(JSON.parse(message.data));
+              var element = document.getElementById("dmesg-output");
+              element.scrollTop = element.scrollHeight;
+            };
+          },
+          levelToColor: function(level) {
+            const level_color = {
+              Emergency: "Crimson",
+              Alert: "DarkOrange",
+              Critical: "DarkRed",
+              Error: "red",
+              Warning: "OrangeRed",
+              Notice: "DarkMagenta",
+              Info: "DarkGray",
+              Debug: "DarkGreen",
+            };
+
+            if (level_color[level]) {
+              return level_color[level];
+            }
+
+            return "black";
+          },
+        },
+        data: function() {
+          return {
+            socket: undefined,
+            data: [],
+          };
+        },
+        template: `
+          <button v-on:click="updateData()">Update</button>
+          <div id="dmesg-output" style="margin-top: 0.7em; max-height:50em; overflow:auto; border:1px solid black;">
+            <pre v-for="entry in data" class="dmesg" v-bind:style="{ color: levelToColor(entry.level)}">{{entry.sequence_number}} [{{entry.facility}}] ({{(entry.timestamp_from_system_start_ns/1e9).toFixed(6)}})> {{entry.message}}</pre>
+          </div>
+          `,
       });
 
       app.mount("#app");

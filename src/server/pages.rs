@@ -1,8 +1,11 @@
 use actix_web::{web, HttpRequest, HttpResponse};
+use actix_web_actors::ws;
 use log::*;
 use serde::Deserialize;
 
 use crate::features;
+
+use super::websocket;
 
 pub fn load_file(file_name: &str) -> String {
     // Load files at runtime only in debug builds
@@ -83,4 +86,21 @@ pub fn raspberry(req: HttpRequest) -> HttpResponse {
     HttpResponse::Ok()
         .content_type("application/json")
         .body(serde_json::to_string_pretty(&features::raspberry::generate_serde_value()).unwrap())
+}
+
+pub fn websocket_kernel_buffer(req: HttpRequest, stream: web::Payload) -> HttpResponse {
+    debug!("{:#?}", req);
+
+    features::kernel_buffer::start_stream();
+
+    ws::start(
+        websocket::new_websocket(websocket::WebsocketEventType::KERNEL_BUFFER),
+        &req,
+        stream,
+    )
+    .unwrap_or_else(|error| {
+        HttpResponse::BadRequest()
+            .content_type("text/plain")
+            .body(format!("error: {:#?}", error))
+    })
 }

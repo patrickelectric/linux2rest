@@ -1,4 +1,5 @@
 mod pages;
+pub mod websocket;
 
 use actix_web::{rt::System, web, App, HttpServer};
 
@@ -20,6 +21,10 @@ pub fn run(server_address: &str) {
             .route("/raspberry", web::get().to(pages::raspberry))
             .route("/system", web::get().to(pages::system))
             .route("/udev", web::get().to(pages::udev))
+            .route(
+                "/ws/kernel_buffer",
+                web::get().to(pages::websocket_kernel_buffer),
+            )
     })
     .bind(server_address)
     .unwrap()

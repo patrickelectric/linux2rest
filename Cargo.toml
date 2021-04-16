@@ -5,7 +5,9 @@ authors = ["Patrick José Pereira <patrickelectric@gmail.com>"]
 edition = "2018"
 
 [dependencies]
-actix-web = "3.3.2"
+actix = "0.10"
+actix-web = "3.3"
+actix-web-actors = "3.0"
 chrono = "0.4"
 env_logger = "0.8"
 lazy_static = "1.4"
@@ -17,7 +19,7 @@ structopt = { version = "0.3", default-features = false }
 #Features
 netstat2 = "0.9"
 pnet = "0.27.2"
-rmesg = { version = "1.0.14", features = ["extra-traits"] }
+rmesg = { version = "1.0.14", features = ["extra-traits", "sync"] }
 rppal = "0.11.3"
 udev = "0.6"
 sysinfo = { git = "https://github.com/GuillaumeGomez/sysinfo", branch="master" }
