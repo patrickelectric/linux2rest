@@ -20,10 +20,13 @@ structopt = { version = "0.3", default-features = false }
 netstat2 = "0.9"
 pnet = "0.27.2"
 rmesg = { version = "1.0.14", features = ["extra-traits", "sync"] }
-rppal = "0.11.3"
+rppal = { version = "0.11.3", optional = true }
 udev = "0.6"
 sysinfo = { git = "https://github.com/GuillaumeGomez/sysinfo", branch="master" }
 
 [build-dependencies]
 reqwest = {version = "0.11", features = ["blocking"]}
 vergen = {version = "4", default-features = false, features = ["build", "git"]}
+
+[features]
+raspberry = ["rppal"]
