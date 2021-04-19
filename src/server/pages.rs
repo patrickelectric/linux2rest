@@ -80,12 +80,12 @@ pub fn udev(req: HttpRequest) -> HttpResponse {
         .body(serde_json::to_string_pretty(&features::udev::generate_serde_value()).unwrap())
 }
 
-pub fn raspberry(req: HttpRequest) -> HttpResponse {
+pub fn platform(req: HttpRequest) -> HttpResponse {
     debug!("{:#?}", req);
 
     HttpResponse::Ok()
         .content_type("application/json")
-        .body(serde_json::to_string_pretty(&features::raspberry::generate_serde_value()).unwrap())
+        .body(serde_json::to_string_pretty(&features::platform::generate_serde_value()).unwrap())
 }
 
 pub fn websocket_kernel_buffer(req: HttpRequest, stream: web::Payload) -> HttpResponse {
