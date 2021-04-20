@@ -26,6 +26,6 @@ pub fn generate_serde_value() -> serde_json::Value {
 
     #[cfg(not(feature = "raspberry"))]
     return serde_json::json!({
-        "error": "Unsupported platform."
+        "error": "Unsupported platform, make sure that platform is enabled during compilation time."
     });
 }
