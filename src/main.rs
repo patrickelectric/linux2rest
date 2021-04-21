@@ -10,5 +10,5 @@ fn main() {
     logger::init();
     features::platform::start();
 
-    server::run("0.0.0.0:1234")
+    server::run("0.0.0.0:6030")
 }
