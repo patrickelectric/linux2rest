@@ -95,7 +95,7 @@
         methods: {},
         data: function() {
           return {
-            tabs: ["netstat", "system", "udev", "kernel"],
+            tabs: ["netstat", "system", "udev", "kernel", "platform"],
             current_tab: "system",
           };
         },
@@ -399,6 +399,43 @@
             <pre v-for="entry in data" class="dmesg" v-bind:style="{ color: levelToColor(entry.level)}">{{entry.sequence_number}} [{{entry.facility}}] ({{(entry.timestamp_from_system_start_ns/1e9).toFixed(6)}})> {{entry.message}}</pre>
           </div>
           `,
+      });
+
+      app.component("tab-platform", {
+        created() {
+          const content = cache["platform"];
+          if (content) {
+            this.data = content;
+            return;
+          }
+
+          this.updateData();
+        },
+        methods: {
+          updateData: async function() {
+            this.data = "loading..";
+            this.data = await request("platform");
+            cache["platform"] = this.data;
+          },
+        },
+        data: function() {
+          return {
+            data: "loading..",
+          };
+        },
+        template: `
+          <button v-on:click="updateData()">Update</button>
+          <div v-if="data.raspberry">
+            <h4>Info</h4>
+            <div>Model: {{data.raspberry.model}}<div/>
+            <div>SOC: {{data.raspberry.soc}}<div/>
+            <h4>Occurring</h4>
+            {{data.raspberry.events.occurring.map(event => event.type)}}
+            <h4>Last events</h4>
+            <div v-for="event in data.raspberry.events.list.sort().reverse()">
+              {{event.time}}: {{event.type}}
+            </div>
+          </div>`,
       });
 
       app.mount("#app");
