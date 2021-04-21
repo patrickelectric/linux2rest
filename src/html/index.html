@@ -309,7 +309,7 @@
         template: `
           <ul>
             <a @click="toggle()">
-              <span class="toggle" span>{{open ? "🗁" : "🗀"}}</span> {{item.system_path}}
+              <span class="toggle" span>{{open ? "☟" : "☞"}}</span> {{item.system_path}}
             </a>
             <pre v-if="item && item.system_path && open">{{pretty_json}}</pre>
             <tab-udev-tree v-if="item.parent" :item="item.parent"/>
