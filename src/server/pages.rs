@@ -30,7 +30,9 @@ pub fn root(req: HttpRequest) -> HttpResponse {
         "" => load_file("index.html"),
         file => load_file(file),
     };
-    HttpResponse::Ok().content_type("text/html").body(path)
+    HttpResponse::Ok()
+        .content_type("text/html; charset=utf-8")
+        .body(path)
 }
 
 #[derive(Deserialize)]
