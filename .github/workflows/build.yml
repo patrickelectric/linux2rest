@@ -14,7 +14,9 @@ jobs:
       - name: Check style
         run: cargo fmt -- --check
       - name: Install libraries
-        run: sudo apt install --yes libudev-dev
+        run: |
+          sudo apt update
+          sudo apt install --yes libudev-dev
       - name: Build
         run: cargo build --verbose
 
