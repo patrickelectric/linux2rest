@@ -23,7 +23,7 @@ notify = { version = "4.0", optional = true }
 rmesg = { version = "1.0.14", features = ["extra-traits", "sync"] }
 rppal = { version = "0.11.3", optional = true }
 udev = "0.6"
-sysinfo = { git = "https://github.com/GuillaumeGomez/sysinfo", branch="master" }
+sysinfo = "0.18"
 
 [build-dependencies]
 reqwest = {version = "0.11", features = ["blocking"]}
