@@ -10,5 +10,5 @@ fn main() {
     logger::init();
     features::platform::start();
 
-    server::run("0.0.0.0:6030")
+    server::run(&format!("0.0.0.0:{}", cli::args().as_ref().port));
 }
