@@ -14,7 +14,7 @@ pub struct Arguments {
     pub verbose: bool,
 
     /// Port to be used for REST API server
-    #[structopt(long, default_value = "7770")]
+    #[structopt(long, default_value = "6030")]
     pub port: u16,
 }
 
