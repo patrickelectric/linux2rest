@@ -49,6 +49,11 @@ jobs:
         name: linux2rest-x86_64
         path: linux2rest-x86_64
 
+    - name: Check tag with toml
+      if: ${{ github.event_name == 'push' && startsWith(github.ref, 'refs/tags/')}}
+      run: |
+        grep ${"$(git describe --tags --abbrev=0)":1} Cargo.toml
+
     - uses: svenstaro/upload-release-action@v2
       name: Upload binaries to release
       if: ${{ github.event_name == 'push' && startsWith(github.ref, 'refs/tags/')}}
