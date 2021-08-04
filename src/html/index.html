@@ -131,7 +131,7 @@
               <th>Local</th>
               <th>Remote</th>
             </tr>
-            <tr v-for="tcp in data.tcp">
+            <tr v-for="tcp in data.tcp.sort((a, b) => a.local.port - b.local.port)">
               <td>{{tcp.pids}}</td>
               <td>{{tcp.state}}</td>
               <td>{{tcp.local.address}}:{{tcp.local.port}}</td>
@@ -147,7 +147,7 @@
               <th>PIDS</th>
               <th>Local</th>
             </tr>
-            <tr v-for="udp in data.udp">
+            <tr v-for="udp in data.udp.sort((a, b) => a.local.port - b.local.port)">
               <td>{{udp.pids}}</td>
               <td>{{udp.local.address}}:{{udp.local.port}}</td>
             </tr>
@@ -267,7 +267,7 @@
               <th>Status</th>
               <th>Command</th>
             </tr>
-            <tr v-for="process in data.process">
+            <tr v-for="process in data.process.sort((a, b) => b.cpu_usage - a.cpu_usage)">
               <td>{{process.name}}</td>
               <td>{{process.pid}}{{process.parent_process ? " / " + process.parent_process : ""}}</td>
               <td>{{process.cpu_usage.toFixed(2)}} %</td>
