@@ -46,16 +46,16 @@ pub fn generate_serde_value(system_type: SystemType) -> serde_json::Value {
             system.refresh_cpu();
 
             let cpus = system
-                .get_processors()
+                .processors()
                 .iter()
                 .map(|cpu| {
                     serde_json::json!(
                         {
-                            "name": cpu.get_name(),
-                            "usage": cpu.get_cpu_usage(),
-                            "frequency": cpu.get_frequency(),
-                            "vendor_id": cpu.get_vendor_id(),
-                            "brand": cpu.get_brand(),
+                            "name": cpu.name(),
+                            "usage": cpu.cpu_usage(),
+                            "frequency": cpu.frequency(),
+                            "vendor_id": cpu.vendor_id(),
+                            "brand": cpu.brand(),
                         }
                     )
                 })
@@ -70,17 +70,17 @@ pub fn generate_serde_value(system_type: SystemType) -> serde_json::Value {
             system.refresh_disks();
 
             let disks = system
-                .get_disks()
+                .disks()
                 .iter()
                 .map(|disk| {
                     serde_json::json!(
                     {
-                        "name": disk.get_name().to_str(),
-                        "filesystem_type": std::str::from_utf8(disk.get_file_system()).unwrap_or_default(),
-                        "type": format!("{:?}", disk.get_type()),
-                        "mount_point": &disk.get_mount_point(),
-                        "available_space_B": &disk.get_available_space(),
-                        "total_space_B": &disk.get_total_space(),
+                        "name": disk.name().to_str(),
+                        "filesystem_type": std::str::from_utf8(disk.file_system()).unwrap_or_default(),
+                        "type": format!("{:?}", disk.type_()),
+                        "mount_point": &disk.mount_point(),
+                        "available_space_B": &disk.available_space(),
+                        "total_space_B": &disk.total_space(),
                     })
                 })
                 .collect::<Vec<serde_json::Value>>();
@@ -93,10 +93,10 @@ pub fn generate_serde_value(system_type: SystemType) -> serde_json::Value {
 
             let info = serde_json::json!(
             {
-                "system_name": system.get_name(),
-                "kernel_version": system.get_kernel_version(),
-                "os_version": system.get_os_version(),
-                "host_name": system.get_host_name(),
+                "system_name": system.name(),
+                "kernel_version": system.kernel_version(),
+                "os_version": system.os_version(),
+                "host_name": system.host_name(),
             });
 
             return serde_json::to_value(&info).unwrap();
@@ -109,12 +109,12 @@ pub fn generate_serde_value(system_type: SystemType) -> serde_json::Value {
             let memory = serde_json::json!(
             {
                 "ram": {
-                    "used_kB" : system.get_used_memory(),
-                    "total_kB" : system.get_total_memory(),
+                    "used_kB" : system.used_memory(),
+                    "total_kB" : system.total_memory(),
                 },
                 "swap": {
-                    "used_kB" : system.get_used_swap(),
-                    "total_kB" : system.get_total_swap(),
+                    "used_kB" : system.used_swap(),
+                    "total_kB" : system.total_swap(),
                 },
             });
 
@@ -129,7 +129,7 @@ pub fn generate_serde_value(system_type: SystemType) -> serde_json::Value {
             let pnet_interfaces = pnet::datalink::interfaces();
 
             let networks = system
-                .get_networks()
+                .networks()
                 .iter()
                 .map(|(name, network)| {
                     let mut pnet_interface = pnet::datalink::NetworkInterface {
@@ -158,23 +158,23 @@ pub fn generate_serde_value(system_type: SystemType) -> serde_json::Value {
                         "is_up": pnet_interface.is_up(),
                         "is_loopback": pnet_interface.is_loopback(),
 
-                        "received_B": network.get_received(),
-                        "total_received_B": network.get_total_received(),
+                        "received_B": network.received(),
+                        "total_received_B": network.total_received(),
 
-                        "transmitted_B": network.get_transmitted(),
-                        "total_transmitted_B": network.get_total_transmitted(),
+                        "transmitted_B": network.transmitted(),
+                        "total_transmitted_B": network.total_transmitted(),
 
-                        "packets_received": network.get_packets_received(),
-                        "total_packets_received": network.get_total_packets_received(),
+                        "packets_received": network.packets_received(),
+                        "total_packets_received": network.total_packets_received(),
 
-                        "packets_transmitted": network.get_packets_transmitted(),
-                        "total_packets_transmitted": network.get_total_packets_transmitted(),
+                        "packets_transmitted": network.packets_transmitted(),
+                        "total_packets_transmitted": network.total_packets_transmitted(),
 
-                        "errors_on_received": network.get_errors_on_received(),
-                        "total_errors_on_received": network.get_total_errors_on_received(),
+                        "errors_on_received": network.errors_on_received(),
+                        "total_errors_on_received": network.total_errors_on_received(),
 
-                        "errors_on_transmitted": network.get_errors_on_transmitted(),
-                        "total_errors_on_transmitted": network.get_total_errors_on_transmitted(),
+                        "errors_on_transmitted": network.errors_on_transmitted(),
+                        "total_errors_on_transmitted": network.total_errors_on_transmitted(),
                     })
                 })
                 .collect::<Vec<serde_json::Value>>();
@@ -186,7 +186,7 @@ pub fn generate_serde_value(system_type: SystemType) -> serde_json::Value {
             let mut system = SYSTEM.lock().unwrap();
             system.refresh_processes();
             let processes = system
-                .get_processes()
+                .processes()
                 .values()
                 .map(|process| {
                     let disk_usage = process.disk_usage();
@@ -223,15 +223,15 @@ pub fn generate_serde_value(system_type: SystemType) -> serde_json::Value {
             system.refresh_components_list();
 
             let temperatures = system
-                .get_components()
+                .components()
                 .iter()
                 .map(|component| {
                     serde_json::json!(
                     {
-                        "name" : component.get_label(),
-                        "temperature" : component.get_temperature(),
-                        "maximum_temperature" : component.get_max(),
-                        "critical_temperature" : component.get_critical(),
+                        "name" : component.label(),
+                        "temperature" : component.temperature(),
+                        "maximum_temperature" : component.max(),
+                        "critical_temperature" : component.critical(),
                     })
                 })
                 .collect::<Vec<serde_json::Value>>();
