@@ -416,8 +416,8 @@
           <button v-on:click="updateData()">Update</button>
           <div v-if="data.raspberry">
             <h4>Info</h4>
-            <div>Model: {{data.raspberry.model}}<div/>
-            <div>SOC: {{data.raspberry.soc}}<div/>
+            <div>Model: {{data.raspberry.model}}</div>
+            <div>SOC: {{data.raspberry.soc}}</div>
             <h4>Occurring</h4>
             {{data.raspberry.events.occurring.map(event => event.type)}}
             <h4>Last events</h4>
