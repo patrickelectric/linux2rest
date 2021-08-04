@@ -424,6 +424,10 @@
             <div v-for="event in data.raspberry.events.list.sort().reverse()">
               {{event.time}}: {{event.type}}
             </div>
+          </div>
+          <div v-else-if="data.error">
+            <h4>Error:</h4>
+            <div>{{data.error}}</div>
           </div>`,
       });
 
