@@ -1,7 +1,8 @@
 mod pages;
 pub mod websocket;
 
-use actix_web::{rt::System, web, App, HttpServer};
+use actix_web::{rt::System, App, HttpServer};
+use paperclip::actix::{web, OpenApiExt};
 
 // Start REST API server with the desired address
 pub fn run(server_address: &str) {
@@ -11,6 +12,9 @@ pub fn run(server_address: &str) {
     let system = System::new("http-server");
     HttpServer::new(|| {
         App::new()
+            .wrap_api()
+            .with_json_spec_at("/docs.json")
+            .with_swagger_ui_at("/docs")
             .route("/", web::get().to(pages::root))
             .route(
                 r"/{filename:.*(\.html|\.js|\.css)}",
@@ -25,6 +29,7 @@ pub fn run(server_address: &str) {
                 "/ws/kernel_buffer",
                 web::get().to(pages::websocket_kernel_buffer),
             )
+            .build()
     })
     .bind(server_address)
     .unwrap()

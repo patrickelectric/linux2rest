@@ -81,6 +81,25 @@ impl Serialize for DeviceUdevAttributes<'_> {
     }
 }
 
+/*
+#[derive(Debug, Serialize, Apiv2Schema)]
+pub struct Device {
+    initialized: bool,
+    device_major_minor_number: String,
+    system_path: String,
+    device_path: String,
+    device_node: String,
+    subsystem_name: String,
+    system_name: String,
+    instance_number: String,
+    device_type: String,
+    driver: String,
+    action: String,
+    parent: Box<Device>,
+    properties: std::iter::Map<String, String>,
+    attributes: std::iter::Map<String, String>,
+}*/
+
 pub fn generate_serde_value() -> Vec<serde_json::Value> {
     let mut enumerator = udev::Enumerator::new().unwrap();
     let result = enumerator.scan_devices().unwrap();

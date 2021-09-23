@@ -1,16 +1,18 @@
 use std::sync::{Arc, Mutex};
 
+use paperclip::actix::Apiv2Schema;
 use pnet;
 use serde::{
     ser::{SerializeMap, SerializeSeq, SerializeStruct},
     Serialize, Serializer,
 };
 use sysinfo::{
-    ComponentExt, DiskExt, NetworkExt, NetworksExt, ProcessExt, ProcessorExt, System, SystemExt,
+    ComponentExt, DiskExt, NetworkExt, NetworksExt, ProcessExt, ProcessorExt, System as sysSystem,
+    SystemExt,
 };
 
 lazy_static! {
-    static ref SYSTEM: Arc<Mutex<System>> = Arc::new(Mutex::new(System::new()));
+    static ref SYSTEM: Arc<Mutex<sysSystem>> = Arc::new(Mutex::new(sysSystem::new()));
 }
 
 #[derive(Debug)]
@@ -25,218 +27,307 @@ pub enum SystemType {
     Temperature,
 }
 
-pub fn generate_serde_value(system_type: SystemType) -> serde_json::Value {
-    match system_type {
-        SystemType::Everything => {
-            let memory = serde_json::json!({
-                "cpu": generate_serde_value(SystemType::Cpu),
-                "disk": generate_serde_value(SystemType::Disk),
-                "info": generate_serde_value(SystemType::Info),
-                "memory": generate_serde_value(SystemType::Memory),
-                "network": generate_serde_value(SystemType::Network),
-                "process": generate_serde_value(SystemType::Process),
-                "temperature": generate_serde_value(SystemType::Temperature),
-            });
+#[derive(Debug, Serialize, Apiv2Schema)]
+pub struct Cpu {
+    name: String,
+    usage: f32,
+    frequency: u64,
+    vendor_id: String,
+    brand: String,
+}
 
-            return serde_json::to_value(&memory).unwrap();
-        }
+#[derive(Debug, Serialize, Apiv2Schema)]
+pub struct Disk {
+    name: String,
+    filesystem_type: String,
+    #[serde(rename = "type")]
+    disk_type: String,
+    mount_point: String,
+    available_space_B: u64,
+    total_space_B: u64,
+}
 
-        SystemType::Cpu => {
-            let mut system = SYSTEM.lock().unwrap();
-            system.refresh_cpu();
+#[derive(Debug, Serialize, Apiv2Schema)]
+pub struct OsInfo {
+    system_name: String,
+    kernel_version: String,
+    os_version: String,
+    host_name: String,
+}
 
-            let cpus = system
-                .processors()
-                .iter()
-                .map(|cpu| {
-                    serde_json::json!(
-                        {
-                            "name": cpu.name(),
-                            "usage": cpu.cpu_usage(),
-                            "frequency": cpu.frequency(),
-                            "vendor_id": cpu.vendor_id(),
-                            "brand": cpu.brand(),
-                        }
-                    )
-                })
-                .collect::<Vec<serde_json::Value>>();
+#[derive(Debug, Serialize, Apiv2Schema)]
+pub struct MemoryUsage {
+    used_kB: u64,
+    total_kB: u64,
+}
 
-            return serde_json::to_value(&cpus).unwrap();
-        }
+#[derive(Debug, Serialize, Apiv2Schema)]
+pub struct Memory {
+    ram: MemoryUsage,
+    swap: MemoryUsage,
+}
 
-        SystemType::Disk => {
-            let mut system = SYSTEM.lock().unwrap();
-            system.refresh_disks_list();
-            system.refresh_disks();
+#[derive(Debug, Serialize, Apiv2Schema)]
+pub struct Network {
+    name: String,
+    description: String,
 
-            let disks = system
-                .disks()
-                .iter()
-                .map(|disk| {
-                    serde_json::json!(
-                    {
-                        "name": disk.name().to_str(),
-                        "filesystem_type": std::str::from_utf8(disk.file_system()).unwrap_or_default(),
-                        "type": format!("{:?}", disk.type_()),
-                        "mount_point": &disk.mount_point(),
-                        "available_space_B": &disk.available_space(),
-                        "total_space_B": &disk.total_space(),
-                    })
-                })
-                .collect::<Vec<serde_json::Value>>();
+    mac: String,
+    ips: Vec<String>,
 
-            return serde_json::to_value(&disks).unwrap();
-        }
+    is_up: bool,
+    is_loopback: bool,
 
-        SystemType::Info => {
-            let system = SYSTEM.lock().unwrap();
+    received_B: u64,
+    total_received_B: u64,
 
-            let info = serde_json::json!(
-            {
-                "system_name": system.name(),
-                "kernel_version": system.kernel_version(),
-                "os_version": system.os_version(),
-                "host_name": system.host_name(),
-            });
+    transmitted_B: u64,
+    total_transmitted_B: u64,
 
-            return serde_json::to_value(&info).unwrap();
-        }
+    packets_received: u64,
+    total_packets_received: u64,
 
-        SystemType::Memory => {
-            let mut system = SYSTEM.lock().unwrap();
-            system.refresh_memory();
+    packets_transmitted: u64,
+    total_packets_transmitted: u64,
 
-            let memory = serde_json::json!(
-            {
-                "ram": {
-                    "used_kB" : system.used_memory(),
-                    "total_kB" : system.total_memory(),
-                },
-                "swap": {
-                    "used_kB" : system.used_swap(),
-                    "total_kB" : system.total_swap(),
-                },
-            });
+    errors_on_received: u64,
+    total_errors_on_received: u64,
 
-            return serde_json::to_value(&memory).unwrap();
-        }
+    errors_on_transmitted: u64,
+    total_errors_on_transmitted: u64,
+}
 
-        SystemType::Network => {
-            let mut system = SYSTEM.lock().unwrap();
-            system.refresh_networks();
-            system.refresh_networks_list();
+//TODO: be consistent between _B, _b and bytes
+#[derive(Debug, Serialize, Apiv2Schema)]
+pub struct DiskUsage {
+    total_written_bytes: u64,
+    written_bytes: u64,
+    total_read_bytes: u64,
+    read_bytes: u64,
+}
 
-            let pnet_interfaces = pnet::datalink::interfaces();
+#[derive(Debug, Serialize, Apiv2Schema)]
+pub struct Process {
+    name: String,
+    pid: i32,
+    status: String,
+    command: Vec<String>,
+    executable_path: String,
+    environment: Vec<String>,
+    working_directory: String,
+    root_directory: String,
+    used_memory_kB: u64,
+    virtual_memory_kB: u64,
+    parent_process: Option<i32>,
+    running_time: u64,
+    cpu_usage: f32,
+    disk_usage: DiskUsage,
+}
 
-            let networks = system
-                .networks()
-                .iter()
-                .map(|(name, network)| {
-                    let mut pnet_interface = pnet::datalink::NetworkInterface {
-                        name: Default::default(),
-                        description: Default::default(),
-                        index: Default::default(),
-                        mac: Default::default(),
-                        ips: Default::default(),
-                        flags: Default::default(),
-                    };
+#[derive(Debug, Serialize, Apiv2Schema)]
+pub struct Temperature {
+    name: String,
+    temperature: f32,
+    maximum_temperature: f32,
+    critical_temperature: Option<f32>,
+}
 
-                    if let Some(interface) = pnet_interfaces
-                        .iter()
-                        .find(|interface| &interface.name == name)
-                    {
-                        pnet_interface = interface.clone();
-                    }
+#[derive(Debug, Serialize, Apiv2Schema)]
+pub struct System {
+    cpu: Vec<Cpu>,
+    disk: Vec<Disk>,
+    info: OsInfo,
+    memory: Memory,
+    network: Vec<Network>,
+    process: Vec<Process>,
+    temperature: Vec<Temperature>,
+}
 
-                    serde_json::json!({
-                        "name": name,
-                        "description": pnet_interface.description,
-
-                        "mac": pnet_interface.mac.unwrap_or(pnet::datalink::MacAddr::zero()).to_string(),
-                        "ips": pnet_interface.ips,
-
-                        "is_up": pnet_interface.is_up(),
-                        "is_loopback": pnet_interface.is_loopback(),
-
-                        "received_B": network.received(),
-                        "total_received_B": network.total_received(),
-
-                        "transmitted_B": network.transmitted(),
-                        "total_transmitted_B": network.total_transmitted(),
-
-                        "packets_received": network.packets_received(),
-                        "total_packets_received": network.total_packets_received(),
-
-                        "packets_transmitted": network.packets_transmitted(),
-                        "total_packets_transmitted": network.total_packets_transmitted(),
-
-                        "errors_on_received": network.errors_on_received(),
-                        "total_errors_on_received": network.total_errors_on_received(),
-
-                        "errors_on_transmitted": network.errors_on_transmitted(),
-                        "total_errors_on_transmitted": network.total_errors_on_transmitted(),
-                    })
-                })
-                .collect::<Vec<serde_json::Value>>();
-
-            return serde_json::to_value(&networks).unwrap();
-        }
-
-        SystemType::Process => {
-            let mut system = SYSTEM.lock().unwrap();
-            system.refresh_processes();
-            let processes = system
-                .processes()
-                .values()
-                .map(|process| {
-                    let disk_usage = process.disk_usage();
-                    serde_json::json!({
-                        "name": process.name(),
-                        "pid": process.pid(),
-                        "status": format!("{:?}", process.status()),
-                        "command": process.cmd(),
-                        "executable_path": process.exe(),
-                        "environment": process.environ(),
-                        "working_directory": process.cwd(),
-                        "root_directory": process.root(),
-                        "used_memory_kB": process.memory(),
-                        "virtual_memory_kB": process.virtual_memory(),
-                        "parent_process": process.parent(),
-                        "running_time": process.start_time(),
-                        "cpu_usage": process.cpu_usage(),
-                        "disk_usage": serde_json::json!({
-                            "total_written_bytes": disk_usage.total_written_bytes,
-                            "written_bytes": disk_usage.written_bytes,
-                            "total_read_bytes": disk_usage.total_read_bytes,
-                            "read_bytes": disk_usage.read_bytes,
-                        }),
-                    })
-                })
-                .collect::<Vec<serde_json::Value>>();
-
-            return serde_json::to_value(&processes).unwrap();
-        }
-
-        SystemType::Temperature => {
-            let mut system = SYSTEM.lock().unwrap();
-            system.refresh_components();
-            system.refresh_components_list();
-
-            let temperatures = system
-                .components()
-                .iter()
-                .map(|component| {
-                    serde_json::json!(
-                    {
-                        "name" : component.label(),
-                        "temperature" : component.temperature(),
-                        "maximum_temperature" : component.max(),
-                        "critical_temperature" : component.critical(),
-                    })
-                })
-                .collect::<Vec<serde_json::Value>>();
-
-            return serde_json::to_value(&temperatures).unwrap();
-        }
+pub fn system() -> System {
+    System {
+        cpu: cpu(),
+        disk: disk(),
+        info: info(),
+        memory: memory(),
+        network: network(),
+        process: process(),
+        temperature: temperature(),
     }
+}
+
+pub fn cpu() -> Vec<Cpu> {
+    let mut system = SYSTEM.lock().unwrap();
+    system.refresh_cpu();
+
+    system
+        .processors()
+        .iter()
+        .map(|cpu| Cpu {
+            name: cpu.name().into(),
+            usage: cpu.cpu_usage(),
+            frequency: cpu.frequency(),
+            vendor_id: cpu.vendor_id().into(),
+            brand: cpu.brand().into(),
+        })
+        .collect::<Vec<Cpu>>()
+}
+
+pub fn disk() -> Vec<Disk> {
+    let mut system = SYSTEM.lock().unwrap();
+    system.refresh_disks_list();
+    system.refresh_disks();
+
+    system
+        .disks()
+        .iter()
+        .map(|disk| Disk {
+            name: disk.name().to_str().unwrap_or_default().into(),
+            filesystem_type: std::str::from_utf8(disk.file_system())
+                .unwrap_or_default()
+                .into(),
+            disk_type: format!("{:?}", disk.type_()),
+            mount_point: disk.mount_point().to_str().unwrap_or_default().into(),
+            available_space_B: disk.available_space().into(),
+            total_space_B: disk.total_space().into(),
+        })
+        .collect::<Vec<Disk>>()
+}
+
+pub fn info() -> OsInfo {
+    let system = SYSTEM.lock().unwrap();
+
+    OsInfo {
+        system_name: system.name().unwrap_or_default(),
+        kernel_version: system.kernel_version().unwrap_or_default(),
+        os_version: system.os_version().unwrap_or_default(),
+        host_name: system.host_name().unwrap_or_default(),
+    }
+}
+
+pub fn memory() -> Memory {
+    let mut system = SYSTEM.lock().unwrap();
+    system.refresh_memory();
+
+    Memory {
+        ram: MemoryUsage {
+            used_kB: system.used_memory(),
+            total_kB: system.total_memory(),
+        },
+        swap: MemoryUsage {
+            used_kB: system.used_swap(),
+            total_kB: system.total_swap(),
+        },
+    }
+}
+
+pub fn network() -> Vec<Network> {
+    let mut system = SYSTEM.lock().unwrap();
+    system.refresh_networks();
+    system.refresh_networks_list();
+
+    let pnet_interfaces = pnet::datalink::interfaces();
+
+    system
+        .networks()
+        .iter()
+        .map(|(name, network)| {
+            let mut pnet_interface = pnet::datalink::NetworkInterface {
+                name: Default::default(),
+                description: Default::default(),
+                index: Default::default(),
+                mac: Default::default(),
+                ips: Default::default(),
+                flags: Default::default(),
+            };
+
+            if let Some(interface) = pnet_interfaces
+                .iter()
+                .find(|interface| &interface.name == name)
+            {
+                pnet_interface = interface.clone();
+            }
+
+            Network {
+                name: name.into(),
+                description: pnet_interface.description.clone(),
+
+                mac: pnet_interface
+                    .mac
+                    .unwrap_or(pnet::datalink::MacAddr::zero())
+                    .to_string(),
+                ips: pnet_interface.ips.iter().map(|ip| ip.to_string()).collect(),
+
+                is_up: pnet_interface.is_up(),
+                is_loopback: pnet_interface.is_loopback(),
+
+                received_B: network.received(),
+                total_received_B: network.total_received(),
+
+                transmitted_B: network.transmitted(),
+                total_transmitted_B: network.total_transmitted(),
+
+                packets_received: network.packets_received(),
+                total_packets_received: network.total_packets_received(),
+
+                packets_transmitted: network.packets_transmitted(),
+                total_packets_transmitted: network.total_packets_transmitted(),
+
+                errors_on_received: network.errors_on_received(),
+                total_errors_on_received: network.total_errors_on_received(),
+
+                errors_on_transmitted: network.errors_on_transmitted(),
+                total_errors_on_transmitted: network.total_errors_on_transmitted(),
+            }
+        })
+        .collect::<Vec<Network>>()
+}
+
+pub fn process() -> Vec<Process> {
+    let mut system = SYSTEM.lock().unwrap();
+    system.refresh_processes();
+    system
+        .processes()
+        .values()
+        .map(|process| {
+            let disk_usage = process.disk_usage();
+            Process {
+                name: process.name().into(),
+                pid: process.pid().into(),
+                status: format!("{:?}", process.status()),
+                command: process.cmd().into(),
+                executable_path: process.exe().to_str().unwrap_or_default().into(),
+                environment: process.environ().into(),
+                working_directory: process.cwd().to_str().unwrap_or_default().into(),
+                root_directory: process.root().to_str().unwrap_or_default().into(),
+                used_memory_kB: process.memory(),
+                virtual_memory_kB: process.virtual_memory(),
+                parent_process: process.parent(),
+                running_time: process.start_time(),
+                cpu_usage: process.cpu_usage(),
+                disk_usage: DiskUsage {
+                    total_written_bytes: disk_usage.total_written_bytes,
+                    written_bytes: disk_usage.written_bytes,
+                    total_read_bytes: disk_usage.total_read_bytes,
+                    read_bytes: disk_usage.read_bytes,
+                },
+            }
+        })
+        .collect::<Vec<Process>>()
+}
+
+pub fn temperature() -> Vec<Temperature> {
+    let mut system = SYSTEM.lock().unwrap();
+    system.refresh_components();
+    system.refresh_components_list();
+
+    system
+        .components()
+        .iter()
+        .map(|component| Temperature {
+            name: component.label().into(),
+            temperature: component.temperature(),
+            maximum_temperature: component.max(),
+            critical_temperature: component.critical(),
+        })
+        .collect::<Vec<Temperature>>()
 }

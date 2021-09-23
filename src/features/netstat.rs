@@ -1,6 +1,63 @@
 use netstat2::{AddressFamilyFlags, ProtocolFlags, ProtocolSocketInfo};
+use paperclip::actix::Apiv2Schema;
+use serde::Serialize;
 
-pub fn generate_serde_value() -> serde_json::Value {
+#[derive(Debug, Serialize, Apiv2Schema)]
+struct AddressPort {
+    address: String,
+    port: u16,
+}
+
+#[derive(Debug, Serialize, Apiv2Schema)]
+struct Udp {
+    local: AddressPort,
+    pids: Vec<u32>,
+}
+
+impl Udp {
+    fn new(udp: &netstat2::UdpSocketInfo, socket_info: &netstat2::SocketInfo) -> Udp {
+        Udp {
+            local: AddressPort {
+                address: udp.local_addr.to_string(),
+                port: udp.local_port,
+            },
+            pids: socket_info.associated_pids.clone(),
+        }
+    }
+}
+
+#[derive(Debug, Serialize, Apiv2Schema)]
+struct Tcp {
+    local: AddressPort,
+    remote: AddressPort,
+    pids: Vec<u32>,
+    state: String,
+}
+
+impl Tcp {
+    fn new(tcp: &netstat2::TcpSocketInfo, socket_info: &netstat2::SocketInfo) -> Tcp {
+        Tcp {
+            local: AddressPort {
+                address: tcp.local_addr.to_string(),
+                port: tcp.local_port,
+            },
+            remote: AddressPort {
+                address: tcp.remote_addr.to_string(),
+                port: tcp.remote_port,
+            },
+            pids: socket_info.associated_pids.clone(),
+            state: format!("{}", tcp.state),
+        }
+    }
+}
+
+#[derive(Debug, Serialize, Apiv2Schema)]
+pub struct Netstat {
+    tcp: Vec<Tcp>,
+    udp: Vec<Udp>,
+}
+
+pub fn netstat() -> Netstat {
     let sockets_info_iter = netstat2::get_sockets_info(
         AddressFamilyFlags::IPV4,
         ProtocolFlags::TCP | ProtocolFlags::UDP,
@@ -13,8 +70,8 @@ pub fn generate_serde_value() -> serde_json::Value {
             ProtocolSocketInfo::Tcp(tcp) => Some((socket_info.clone(), tcp)),
             ProtocolSocketInfo::Udp(_udp) => None,
         })
-        .map(|(socket_info, tcp)| generate_serde_from_tcp(tcp, &socket_info))
-        .collect::<Vec<serde_json::Value>>();
+        .map(|(socket_info, tcp)| Tcp::new(tcp, &socket_info))
+        .collect::<Vec<Tcp>>();
 
     let udps = sockets_info_iter
         .iter()
@@ -22,42 +79,11 @@ pub fn generate_serde_value() -> serde_json::Value {
             ProtocolSocketInfo::Tcp(_tcp) => None,
             ProtocolSocketInfo::Udp(udp) => Some((socket_info.clone(), udp)),
         })
-        .map(|(socket_info, udp)| generate_serde_from_udp(udp, &socket_info))
-        .collect::<Vec<serde_json::Value>>();
+        .map(|(socket_info, udp)| Udp::new(udp, &socket_info))
+        .collect::<Vec<Udp>>();
 
-    serde_json::json!({
-        "tcp": tcps,
-        "udp": udps,
-    })
-}
-
-fn generate_serde_from_tcp(
-    tcp: &netstat2::TcpSocketInfo,
-    socket_info: &netstat2::SocketInfo,
-) -> serde_json::Value {
-    serde_json::json!({
-        "local": {
-            "address": tcp.local_addr,
-            "port": tcp.local_port,
-        },
-        "remote": {
-            "address": tcp.remote_addr,
-            "port": tcp.remote_port,
-        },
-        "pids": socket_info.associated_pids,
-        "state": format!("{}", tcp.state),
-    })
-}
-
-fn generate_serde_from_udp(
-    tcp: &netstat2::UdpSocketInfo,
-    socket_info: &netstat2::SocketInfo,
-) -> serde_json::Value {
-    serde_json::json!({
-        "local": {
-            "address": tcp.local_addr,
-            "port": tcp.local_port,
-        },
-        "pids": socket_info.associated_pids,
-    })
+    Netstat {
+        tcp: tcps,
+        udp: udps,
+    }
 }

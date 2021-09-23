@@ -3,6 +3,7 @@ use std::sync::{mpsc::channel, Arc, Mutex, Once};
 use chrono;
 use log::*;
 use notify::{RecommendedWatcher, RecursiveMode, Watcher};
+use paperclip::actix::Apiv2Schema;
 use serde::Serialize;
 
 #[derive(Clone, Serialize)]
@@ -13,14 +14,14 @@ pub enum EventType {
     UnderVoltage,
 }
 
-#[derive(Clone, Serialize)]
+#[derive(Clone, Serialize, Apiv2Schema)]
 pub struct Event {
     pub time: chrono::DateTime<chrono::Local>,
     #[serde(rename = "type")]
     pub typ: EventType,
 }
 
-#[derive(Clone, Default, Serialize)]
+#[derive(Clone, Default, Serialize, Apiv2Schema)]
 pub struct Events {
     pub occurring: Vec<Event>,
     pub list: Vec<Event>,

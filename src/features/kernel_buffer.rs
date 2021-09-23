@@ -1,10 +1,21 @@
 use crate::server::websocket;
 
+use paperclip::actix::Apiv2Schema;
 use rmesg;
+use serde::Serialize;
 
 use std::sync::Once;
 
 static ONCE: Once = Once::new();
+
+#[derive(Clone, Serialize, Apiv2Schema)]
+pub struct KernelMessage {
+    facility: String,
+    level: String,
+    sequence_number: usize,
+    timestamp_from_system_start_ns: u64,
+    message: String,
+}
 
 pub fn start_stream() {
     ONCE.call_once(|| {
@@ -49,7 +60,7 @@ pub fn start_stream() {
     });
 }
 
-pub fn generate_serde_value(start: Option<u64>, size: Option<u64>) -> serde_json::Value {
+pub fn messages(start: Option<u64>, size: Option<u64>) -> Result<Vec<KernelMessage>, String> {
     match rmesg::log_entries(rmesg::Backend::Default, false) {
         Ok(entries) => {
             let mut entries: Vec<rmesg::entry::Entry> = entries.into();
@@ -72,22 +83,28 @@ pub fn generate_serde_value(start: Option<u64>, size: Option<u64>) -> serde_json
                 .skip(start.unwrap_or_default() as usize);
 
             let length = entries.size_hint().1.unwrap() as u64;
-            let entries: Vec<serde_json::Value>  = entries
+            let entries: Vec<KernelMessage> = entries
                 .take(size.unwrap_or(length) as usize)
-                .map(|(index, entry)| {
-                    serde_json::json!({
-                        "facility": entry.facility,
-                        "level": entry.level,
-                        "sequence_number": index,
-                        "timestamp_from_system_start_ns": entry.timestamp_from_system_start.unwrap_or_default().as_nanos() as u64,
-                        "message": entry.message,
-                    })
+                .map(|(index, entry)| KernelMessage {
+                    facility: match entry.facility {
+                        Some(facility) => facility.to_string(),
+                        None => "".into(),
+                    },
+                    level: match entry.level {
+                        Some(level) => level.to_string(),
+                        None => "".into(),
+                    },
+                    sequence_number: index,
+                    timestamp_from_system_start_ns: entry
+                        .timestamp_from_system_start
+                        .unwrap_or_default()
+                        .as_nanos() as u64,
+                    message: entry.message.clone(),
                 })
                 .collect();
-            return serde_json::to_value(&entries).unwrap();
+
+            Ok(entries)
         }
-        Err(error) => {
-            return serde_json::json!({ "error": format!("{:?}", error) });
-        }
-    };
+        Err(error) => Err(format!("{}", error)),
+    }
 }

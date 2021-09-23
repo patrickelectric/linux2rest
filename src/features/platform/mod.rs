@@ -1,4 +1,6 @@
 use log::*;
+use paperclip::actix::Apiv2Schema;
+use serde::Serialize;
 
 #[cfg(feature = "raspberry")]
 mod raspberry;
@@ -8,24 +10,42 @@ pub fn start() {
     raspberry::start_raspberry_events_scanner();
 }
 
-pub fn generate_serde_value() -> serde_json::Value {
+#[cfg(feature = "raspberry")]
+#[derive(Clone, Serialize, Apiv2Schema)]
+pub struct Raspberry {
+    model: String,
+    soc: String,
+    events: Vec<Event>,
+}
+
+#[cfg(feature = "raspberry")]
+#[derive(Clone, Serialize, Apiv2Schema)]
+pub struct Platform {
+    raspberry: Raspberry,
+}
+
+#[cfg(not(feature = "raspberry"))]
+#[derive(Clone, Serialize, Apiv2Schema)]
+pub struct Platform {}
+
+pub fn platform() -> Result<Platform, String> {
     #[cfg(feature = "raspberry")]
     {
         use rppal;
         return match rppal::system::DeviceInfo::new() {
-            Ok(system) => serde_json::json!({
-                "raspberry": {
-                    "model": system.model().to_string(),
-                    "soc": system.soc().to_string(),
-                    "events": raspberry::events(),
-                }
-            }),
-            Err(error) => serde_json::json!({ "error": format!("{:?}", error) }),
+            Ok(system) => Plataform {
+                raspberry: Raspberry {
+                    model: system.model().to_string(),
+                    soc: system.soc().to_string(),
+                    events: raspberry::events(),
+                },
+            },
+            Err(error) => Err(format!("{:?}", error)),
         };
     }
 
     #[cfg(not(feature = "raspberry"))]
-    return serde_json::json!({
-        "error": "Unsupported platform, make sure that platform is enabled during compilation time."
-    });
+    return Err(
+        "Unsupported platform, make sure that platform is enabled during compilation time.".into(),
+    );
 }

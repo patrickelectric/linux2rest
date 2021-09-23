@@ -421,13 +421,13 @@
             <h4>Occurring</h4>
             {{data.raspberry.events.occurring.map(event => event.type)}}
             <h4>Last events</h4>
-            <div v-for="event in data.raspberry.events.list.sort().reverse()">
+            <div v-for="event in data.raspberry.events.sort().reverse()">
               {{event.time}}: {{event.type}}
             </div>
           </div>
-          <div v-else-if="data.error">
+          <div v-else-if="data.Err">
             <h4>Error:</h4>
-            <div>{{data.error}}</div>
+            <div>{{data.Err}}</div>
           </div>`,
       });
 

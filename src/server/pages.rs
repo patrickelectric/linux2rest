@@ -1,6 +1,11 @@
-use actix_web::{web, HttpRequest, HttpResponse};
+use actix_web::{
+    web::{self, Json},
+    HttpRequest, HttpResponse,
+};
 use actix_web_actors::ws;
 use log::*;
+use paperclip::actix::api_v2_operation;
+use paperclip::actix::Apiv2Schema;
 use serde::Deserialize;
 
 use crate::features;
@@ -35,45 +40,51 @@ pub fn root(req: HttpRequest) -> HttpResponse {
         .body(path)
 }
 
-#[derive(Deserialize)]
+#[derive(Deserialize, Apiv2Schema)]
 pub struct KernelBufferQuery {
     start: Option<u64>,
     size: Option<u64>,
 }
 
-pub fn kernel_buffer(req: HttpRequest, query: web::Query<KernelBufferQuery>) -> HttpResponse {
+#[api_v2_operation]
+/// Provides kernel information, like dmesg
+pub fn kernel_buffer(
+    req: HttpRequest,
+    query: web::Query<KernelBufferQuery>,
+) -> Json<Vec<features::kernel_buffer::KernelMessage>> {
     debug!("{:#?}", req);
 
     let query = query.into_inner();
 
-    HttpResponse::Ok().content_type("application/json").body(
-        serde_json::to_string_pretty(&features::kernel_buffer::generate_serde_value(
-            query.start,
-            query.size,
-        ))
-        .unwrap(),
+    Json(
+        match features::kernel_buffer::messages(query.start, query.size) {
+            Ok(content) => content,
+            Err(error) => {
+                debug!("{:?}", error);
+                Vec::new()
+            }
+        },
     )
 }
 
-pub fn netstat(req: HttpRequest) -> HttpResponse {
+#[api_v2_operation]
+/// Provides the same output as netstat: TCP/UDP ports that are in use and who is using it
+pub fn netstat(req: HttpRequest) -> Json<features::netstat::Netstat> {
     debug!("{:#?}", req);
 
-    HttpResponse::Ok()
-        .content_type("application/json")
-        .body(serde_json::to_string_pretty(&features::netstat::generate_serde_value()).unwrap())
+    Json(features::netstat::netstat())
 }
 
-pub fn system(req: HttpRequest) -> HttpResponse {
+#[api_v2_operation]
+/// Provides system information: cpu, disk, operating system, memory, network, processes, sensors
+pub async fn system(req: HttpRequest) -> Json<features::system::System> {
     debug!("{:#?}", req);
 
-    HttpResponse::Ok().content_type("application/json").body(
-        serde_json::to_string_pretty(&features::system::generate_serde_value(
-            features::system::SystemType::Everything,
-        ))
-        .unwrap(),
-    )
+    Json(features::system::system())
 }
 
+#[api_v2_operation]
+/// (WIP) Provides information about all devices connected to the main computer
 pub fn udev(req: HttpRequest) -> HttpResponse {
     debug!("{:#?}", req);
 
@@ -82,12 +93,12 @@ pub fn udev(req: HttpRequest) -> HttpResponse {
         .body(serde_json::to_string_pretty(&features::udev::generate_serde_value()).unwrap())
 }
 
-pub fn platform(req: HttpRequest) -> HttpResponse {
+#[api_v2_operation]
+/// Provide platform specific information
+pub async fn platform(req: HttpRequest) -> Json<Result<features::platform::Platform, String>> {
     debug!("{:#?}", req);
 
-    HttpResponse::Ok()
-        .content_type("application/json")
-        .body(serde_json::to_string_pretty(&features::platform::generate_serde_value()).unwrap())
+    Json(features::platform::platform())
 }
 
 pub fn websocket_kernel_buffer(req: HttpRequest, stream: web::Payload) -> HttpResponse {

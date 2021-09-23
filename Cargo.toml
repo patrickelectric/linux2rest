@@ -18,6 +18,7 @@ structopt = { version = "0.3", default-features = false }
 
 #Features
 netstat2 = "0.9"
+paperclip = { git = "https://github.com/patrickelectric/paperclip", branch = "patrick-swagger-url", features = ["actix", "swagger-ui", "url"] }
 pnet = "0.27.2"
 notify = { version = "4.0", optional = true }
 rmesg = { version = "1.0.14", features = ["extra-traits", "sync"] }
