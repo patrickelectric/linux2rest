@@ -6,7 +6,7 @@ use notify::{RecommendedWatcher, RecursiveMode, Watcher};
 use paperclip::actix::Apiv2Schema;
 use serde::Serialize;
 
-#[derive(Clone, Serialize)]
+#[derive(Clone, Serialize, Apiv2Schema)]
 pub enum EventType {
     FrequencyCapping,
     TemperatureLimit,

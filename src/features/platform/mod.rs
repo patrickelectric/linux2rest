@@ -15,7 +15,7 @@ pub fn start() {
 pub struct Raspberry {
     model: String,
     soc: String,
-    events: Vec<Event>,
+    events: raspberry::Events,
 }
 
 #[cfg(feature = "raspberry")]
@@ -33,13 +33,13 @@ pub fn platform() -> Result<Platform, String> {
     {
         use rppal;
         return match rppal::system::DeviceInfo::new() {
-            Ok(system) => Plataform {
+            Ok(system) => Ok(Platform {
                 raspberry: Raspberry {
                     model: system.model().to_string(),
                     soc: system.soc().to_string(),
                     events: raspberry::events(),
                 },
-            },
+            }),
             Err(error) => Err(format!("{:?}", error)),
         };
     }
