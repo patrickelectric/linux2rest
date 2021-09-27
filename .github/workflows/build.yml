@@ -13,6 +13,13 @@ jobs:
           override: true
       - name: Check style
         run: cargo fmt -- --check
+      - name: Check tag with toml
+        if: ${{ github.event_name == 'push' && startsWith(github.ref, 'refs/tags/')}}
+        run: |
+          VERSION_TAG="$(git describe --tags --abbrev=0)"
+          echo "Version tag: $VERSION_TAG"
+          echo "Checking if toml is updated.."
+          grep ${VERSION_TAG:1} Cargo.toml
       - name: Install libraries
         run: |
           sudo apt update
@@ -48,14 +55,6 @@ jobs:
       with:
         name: linux2rest-x86_64
         path: linux2rest-x86_64
-
-    - name: Check tag with toml
-      if: ${{ github.event_name == 'push' && startsWith(github.ref, 'refs/tags/')}}
-      run: |
-        VERSION_TAG="$(git describe --tags --abbrev=0)"
-        echo "Version tag: $VERSION_TAG"
-        echo "Checking if toml is updated.."
-        grep ${VERSION_TAG:1} Cargo.toml
 
     - uses: svenstaro/upload-release-action@v2
       name: Upload binaries to release
