@@ -95,10 +95,17 @@ pub fn udev(req: HttpRequest) -> HttpResponse {
 
 #[api_v2_operation]
 /// Provide platform specific information
-pub async fn platform(req: HttpRequest) -> Json<Result<features::platform::Platform, String>> {
+pub async fn platform(req: HttpRequest) -> HttpResponse {
     debug!("{:#?}", req);
 
-    Json(features::platform::platform())
+    match features::platform::platform() {
+        Ok(content) => HttpResponse::Ok()
+            .content_type("application/json")
+            .body(serde_json::to_string_pretty(&content).unwrap()),
+        Err(error) => HttpResponse::InternalServerError()
+            .content_type("text/plain")
+            .body(format!("error: {}", error)),
+    }
 }
 
 pub fn websocket_kernel_buffer(req: HttpRequest, stream: web::Payload) -> HttpResponse {
