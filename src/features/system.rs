@@ -1,5 +1,6 @@
 use std::sync::{Arc, Mutex};
 
+use log::*;
 use paperclip::actix::Apiv2Schema;
 use pnet;
 use serde::{
@@ -141,6 +142,7 @@ pub struct System {
     network: Vec<Network>,
     process: Vec<Process>,
     temperature: Vec<Temperature>,
+    unix_time_seconds: u64,
 }
 
 pub fn system() -> System {
@@ -152,6 +154,7 @@ pub fn system() -> System {
         network: network(),
         process: process(),
         temperature: temperature(),
+        unix_time_seconds: unix_time_seconds(),
     }
 }
 
@@ -330,4 +333,14 @@ pub fn temperature() -> Vec<Temperature> {
             critical_temperature: component.critical(),
         })
         .collect::<Vec<Temperature>>()
+}
+
+pub fn unix_time_seconds() -> u64 {
+    return match std::time::SystemTime::now().duration_since(std::time::UNIX_EPOCH) {
+        Ok(time) => time.as_secs(),
+        Err(error) => {
+            warn!("SystemTime before UNIX EPOCH: {error}");
+            0
+        }
+    };
 }

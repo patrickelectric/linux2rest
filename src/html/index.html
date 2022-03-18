@@ -187,6 +187,7 @@
               Kernel version: {{data.info.kernel_version}}<br>
               OS version: {{data.info.os_version}}<br>
               OS name: {{data.info.system_name}} {{data.info.system_name.includes("Arch") ? "(I use Arch BTW)" : ""}}<br>
+              OS name: {{new Date(data.unix_time_seconds * 1000).toTimeString()}}<br>
             </div>
             <div>
               <h3>Temperature</h3>
