@@ -53,7 +53,7 @@ pub fn start_stream() {
                         }
                     };
 
-                    websocket::manager().lock().unwrap().send(websocket::WebsocketEventType::KERNEL_BUFFER, &message);
+                    websocket::manager().lock().unwrap().send(websocket::WebsocketEventType::KernelBuffer, &message);
                 }
             }
         });
