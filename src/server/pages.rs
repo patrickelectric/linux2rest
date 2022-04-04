@@ -112,7 +112,9 @@ pub fn websocket_kernel_buffer(req: HttpRequest, stream: web::Payload) -> HttpRe
     features::kernel_buffer::start_stream();
 
     ws::start(
-        features::kernel_websocket::new_websocket(features::kernel_websocket::WebsocketEventType::KernelBuffer),
+        features::kernel_websocket::new_websocket(
+            features::kernel_websocket::WebsocketEventType::KernelBuffer,
+        ),
         &req,
         stream,
     )

@@ -69,7 +69,10 @@ pub fn start_stream() {
                         }
                     };
 
-                    kernel_websocket::manager().lock().unwrap().send(kernel_websocket::WebsocketEventType::KernelBuffer, &message);
+                    kernel_websocket::manager()
+                        .lock()
+                        .unwrap()
+                        .send(kernel_websocket::WebsocketEventType::KernelBuffer, &message);
                 }
             }
         });
