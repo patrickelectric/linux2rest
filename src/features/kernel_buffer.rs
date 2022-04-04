@@ -1,4 +1,4 @@
-use crate::server::websocket;
+use super::kernel_websocket;
 
 use paperclip::actix::Apiv2Schema;
 use rmesg;
@@ -53,7 +53,7 @@ pub fn start_stream() {
                         }
                     };
 
-                    websocket::manager().lock().unwrap().send(websocket::WebsocketEventType::KernelBuffer, &message);
+                    kernel_websocket::manager().lock().unwrap().send(kernel_websocket::WebsocketEventType::KernelBuffer, &message);
                 }
             }
         });
@@ -75,7 +75,6 @@ pub fn messages(start: Option<u64>, size: Option<u64>) -> Result<Vec<KernelMessa
 
                 last_valid_iter.message += &format!("\n{}", entry.message);
             }
-
             let entries = entries
                 .iter()
                 .filter(|entry| entry.sequence_num.is_some())

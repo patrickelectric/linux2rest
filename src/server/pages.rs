@@ -10,8 +10,6 @@ use serde::Deserialize;
 
 use crate::features;
 
-use super::websocket;
-
 pub fn load_file(file_name: &str) -> String {
     // Load files at runtime only in debug builds
     if cfg!(debug_assertions) {
@@ -114,7 +112,7 @@ pub fn websocket_kernel_buffer(req: HttpRequest, stream: web::Payload) -> HttpRe
     features::kernel_buffer::start_stream();
 
     ws::start(
-        websocket::new_websocket(websocket::WebsocketEventType::KernelBuffer),
+        features::kernel_websocket::new_websocket(features::kernel_websocket::WebsocketEventType::KernelBuffer),
         &req,
         stream,
     )

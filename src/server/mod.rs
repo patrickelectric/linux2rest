@@ -1,5 +1,4 @@
 mod pages;
-pub mod websocket;
 
 use actix_web::{rt::System, App, HttpServer};
 use paperclip::actix::{web, OpenApiExt};
