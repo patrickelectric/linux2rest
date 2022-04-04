@@ -16,18 +16,6 @@ lazy_static! {
     static ref SYSTEM: Arc<Mutex<sysSystem>> = Arc::new(Mutex::new(sysSystem::new()));
 }
 
-#[derive(Debug)]
-pub enum SystemType {
-    Cpu,
-    Disk,
-    Everything,
-    Info,
-    Memory,
-    Network,
-    Process,
-    Temperature,
-}
-
 #[derive(Debug, Serialize, Apiv2Schema)]
 pub struct Cpu {
     name: String,
