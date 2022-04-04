@@ -1,18 +1,14 @@
 use actix::{self, Actor, Addr, AsyncContext, Handler, Message, StreamHandler};
-use actix_web::{web, HttpRequest, HttpResponse};
 use actix_web_actors::ws;
 use serde::Serialize;
 
 use log::*;
 
-use std::{
-    borrow::BorrowMut,
-    sync::{Arc, Mutex},
-};
+use std::sync::{Arc, Mutex};
 
 #[derive(Debug, Eq, PartialEq, Hash, Clone, Copy)]
 pub enum WebsocketEventType {
-    KERNEL_BUFFER,
+    KernelBuffer,
 }
 
 pub struct StringMessage(String);
@@ -115,7 +111,7 @@ impl StreamHandler<Result<ws::Message, ws::ProtocolError>> for WebsocketActor {
     fn handle(&mut self, msg: Result<ws::Message, ws::ProtocolError>, ctx: &mut Self::Context) {
         match msg {
             Ok(ws::Message::Ping(msg)) => ctx.pong(&msg),
-            Ok(ws::Message::Text(text)) => {
+            Ok(ws::Message::Text(_)) => {
                 ctx.text(
                     serde_json::to_string(&WebsocketError {
                         error: "Websocket does not support inputs.".to_string(),
