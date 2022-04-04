@@ -360,14 +360,14 @@
           },
           levelToColor: function(level) {
             const level_color = {
-              Emergency: "Crimson",
-              Alert: "DarkOrange",
-              Critical: "DarkRed",
-              Error: "red",
-              Warning: "OrangeRed",
-              Notice: "DarkMagenta",
-              Info: "DarkGray",
-              Debug: "DarkGreen",
+              emerg: "Crimson",
+              alert: "DarkOrange",
+              crit: "DarkRed",
+              err: "red",
+              warn: "OrangeRed",
+              notice: "DarkMagenta"
+              info: "DarkGray",
+              debug: "DarkGreen",
             };
 
             if (level_color[level]) {
