@@ -17,11 +17,32 @@ pub struct KernelMessage {
     message: String,
 }
 
+impl KernelMessage {
+    fn from_index_entry(index: usize, entry: &rmesg::entry::Entry) -> Self {
+        KernelMessage {
+            facility: match entry.facility {
+                Some(facility) => facility.to_string(),
+                None => "".into(),
+            },
+            level: match entry.level {
+                Some(level) => level.to_string(),
+                None => "".into(),
+            },
+            sequence_number: index,
+            timestamp_from_system_start_ns: entry
+                .timestamp_from_system_start
+                .unwrap_or_default()
+                .as_nanos() as u64,
+            message: entry.message.clone(),
+        }
+    }
+}
+
 pub fn start_stream() {
     ONCE.call_once(|| {
         std::thread::spawn(|| loop {
             let mut previous_entry: Option<rmesg::entry::Entry> = None;
-            let mut index: u64 = 0;
+            let mut index: usize = 0;
             for stream in rmesg::logs_iter(rmesg::Backend::Default, false, false) {
                 for entry in stream {
                     let message = match entry {
@@ -38,13 +59,8 @@ pub fn start_stream() {
                             }
 
                             let previous_entry = previous_entry.clone().unwrap();
-                            serde_json::json!({
-                                "facility": previous_entry.facility,
-                                "level": previous_entry.level,
-                                "sequence_number": index,
-                                "timestamp_from_system_start_ns": previous_entry.timestamp_from_system_start.unwrap_or_default().as_nanos() as u64,
-                                "message": entry.message,
-                            })
+                            let message = KernelMessage::from_index_entry(index, &previous_entry);
+                            serde_json::json!(&message)
                         }
                         Err(error) => {
                             serde_json::json!({
@@ -84,22 +100,7 @@ pub fn messages(start: Option<u64>, size: Option<u64>) -> Result<Vec<KernelMessa
             let length = entries.size_hint().1.unwrap() as u64;
             let entries: Vec<KernelMessage> = entries
                 .take(size.unwrap_or(length) as usize)
-                .map(|(index, entry)| KernelMessage {
-                    facility: match entry.facility {
-                        Some(facility) => facility.to_string(),
-                        None => "".into(),
-                    },
-                    level: match entry.level {
-                        Some(level) => level.to_string(),
-                        None => "".into(),
-                    },
-                    sequence_number: index,
-                    timestamp_from_system_start_ns: entry
-                        .timestamp_from_system_start
-                        .unwrap_or_default()
-                        .as_nanos() as u64,
-                    message: entry.message.clone(),
-                })
+                .map(|(index, entry)| KernelMessage::from_index_entry(index, entry))
                 .collect();
 
             Ok(entries)
