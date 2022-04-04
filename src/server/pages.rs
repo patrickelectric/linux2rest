@@ -82,6 +82,72 @@ pub async fn system(req: HttpRequest) -> Json<features::system::System> {
 }
 
 #[api_v2_operation]
+/// Provides system information for cpu only
+pub async fn system_cpu(req: HttpRequest) -> Json<Vec<features::system::Cpu>> {
+    debug!("{:#?}", req);
+
+    Json(features::system::cpu())
+}
+
+#[api_v2_operation]
+/// Provides system information for disk only
+pub async fn system_disk(req: HttpRequest) -> Json<Vec<features::system::Disk>> {
+    debug!("{:#?}", req);
+
+    Json(features::system::disk())
+}
+
+#[api_v2_operation]
+/// Provides system information from operating system only
+pub async fn system_info(req: HttpRequest) -> Json<features::system::OsInfo> {
+    debug!("{:#?}", req);
+
+    Json(features::system::info())
+}
+
+#[api_v2_operation]
+/// Provides system information for memory only
+pub async fn system_memory(req: HttpRequest) -> Json<features::system::Memory> {
+    debug!("{:#?}", req);
+
+    Json(features::system::memory())
+}
+
+#[api_v2_operation]
+/// Provides system information for network only
+pub async fn system_network(req: HttpRequest) -> Json<Vec<features::system::Network>> {
+    debug!("{:#?}", req);
+
+    Json(features::system::network())
+}
+
+#[api_v2_operation]
+/// Provides system information for processes only
+pub async fn system_process(req: HttpRequest) -> Json<Vec<features::system::Process>> {
+    debug!("{:#?}", req);
+
+    Json(features::system::process())
+}
+
+#[api_v2_operation]
+/// Provides system information for sensors only
+pub async fn system_temperature(req: HttpRequest) -> Json<Vec<features::system::Temperature>> {
+    debug!("{:#?}", req);
+
+    Json(features::system::temperature())
+}
+
+#[api_v2_operation]
+/// Provides system information about current unix time
+pub async fn system_unix_time_seconds(req: HttpRequest) -> HttpResponse {
+    debug!("{:#?}", req);
+
+    HttpResponse::Ok()
+        .content_type("text/plain")
+        .body(features::system::unix_time_seconds().to_string())
+}
+
+#[api_v2_operation]
 /// (WIP) Provides information about all devices connected to the main computer
 pub fn udev(req: HttpRequest) -> HttpResponse {
     debug!("{:#?}", req);

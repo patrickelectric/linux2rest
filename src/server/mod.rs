@@ -23,6 +23,20 @@ pub fn run(server_address: &str) {
             .route("/netstat", web::get().to(pages::netstat))
             .route("/platform", web::get().to(pages::platform))
             .route("/system", web::get().to(pages::system))
+            .route("/system/cpu", web::get().to(pages::system_cpu))
+            .route("/system/disk", web::get().to(pages::system_disk))
+            .route("/system/info", web::get().to(pages::system_info))
+            .route("/system/memory", web::get().to(pages::system_memory))
+            .route("/system/network", web::get().to(pages::system_network))
+            .route("/system/process", web::get().to(pages::system_process))
+            .route(
+                "/system/temperature",
+                web::get().to(pages::system_temperature),
+            )
+            .route(
+                "/system/unix_time_seconds",
+                web::get().to(pages::system_unix_time_seconds),
+            )
             .route("/udev", web::get().to(pages::udev))
             .route(
                 "/ws/kernel_buffer",
