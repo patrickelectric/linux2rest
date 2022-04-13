@@ -1,4 +1,3 @@
-use log::*;
 use paperclip::actix::Apiv2Schema;
 use serde::Serialize;
 

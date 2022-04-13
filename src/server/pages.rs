@@ -40,8 +40,8 @@ pub fn root(req: HttpRequest) -> HttpResponse {
 
 #[derive(Deserialize, Apiv2Schema)]
 pub struct KernelBufferQuery {
-    start: Option<u64>,
-    size: Option<u64>,
+    start: Option<usize>,
+    size: Option<usize>,
 }
 
 #[api_v2_operation]
@@ -49,20 +49,12 @@ pub struct KernelBufferQuery {
 pub fn kernel_buffer(
     req: HttpRequest,
     query: web::Query<KernelBufferQuery>,
-) -> Json<Vec<features::kernel_buffer::KernelMessage>> {
+) -> Json<Vec<features::kernel::KernelMessage>> {
     debug!("{:#?}", req);
 
     let query = query.into_inner();
 
-    Json(
-        match features::kernel_buffer::messages(query.start, query.size) {
-            Ok(content) => content,
-            Err(error) => {
-                debug!("{:?}", error);
-                Vec::new()
-            }
-        },
-    )
+    Json(features::kernel::messages(query.start, query.size))
 }
 
 #[api_v2_operation]
@@ -174,8 +166,6 @@ pub async fn platform(req: HttpRequest) -> HttpResponse {
 
 pub fn websocket_kernel_buffer(req: HttpRequest, stream: web::Payload) -> HttpResponse {
     debug!("{:#?}", req);
-
-    features::kernel_buffer::start_stream();
 
     ws::start(
         features::kernel_websocket::new_websocket(
