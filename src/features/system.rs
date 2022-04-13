@@ -3,10 +3,7 @@ use std::sync::{Arc, Mutex};
 use log::*;
 use paperclip::actix::Apiv2Schema;
 use pnet;
-use serde::{
-    ser::{SerializeMap, SerializeSeq, SerializeStruct},
-    Serialize, Serializer,
-};
+use serde::Serialize;
 use sysinfo::{
     ComponentExt, DiskExt, NetworkExt, NetworksExt, ProcessExt, ProcessorExt, System as sysSystem,
     SystemExt,
