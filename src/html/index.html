@@ -353,7 +353,7 @@
             websocketUrl.protocol = websocketUrl.protocol.replace('http', 'ws');
             this.socket = new WebSocket(websocketUrl.href);
             this.socket.onmessage = (message) => {
-              this.data.push(JSON.parse(message.data));
+              this.data = this.data.concat(JSON.parse(message.data));
               var element = document.getElementById("dmesg-output");
               element.scrollTop = element.scrollHeight;
             };
