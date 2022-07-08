@@ -65,6 +65,24 @@ pub fn netstat(req: HttpRequest) -> Json<features::netstat::Netstat> {
     Json(features::netstat::netstat())
 }
 
+#[derive(Debug, Deserialize, Apiv2Schema)]
+pub struct SerialQuery {
+    udev: Option<bool>,
+}
+
+#[api_v2_operation]
+/// Provides information about serial ports
+pub async fn serial(
+    req: HttpRequest,
+    query: web::Query<SerialQuery>,
+) -> Json<features::serial::SerialPorts> {
+    debug!("{:#?}, {:#?}", req, &query);
+
+    let query = query.into_inner();
+
+    Json(features::serial::serial(query.udev))
+}
+
 #[api_v2_operation]
 /// Provides system information: cpu, disk, operating system, memory, network, processes, sensors
 pub async fn system(req: HttpRequest) -> Json<features::system::System> {

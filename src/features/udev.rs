@@ -110,7 +110,7 @@ pub fn generate_serde_value() -> Vec<serde_json::Value> {
     return vector;
 }
 
-fn generate_serde_from_device(device: &udev::Device) -> serde_json::Value {
+pub fn generate_serde_from_device(device: &udev::Device) -> serde_json::Value {
     serde_json::json!({
         "initialized": device.is_initialized(),
         "device_major_minor_number": device.devnum(),
