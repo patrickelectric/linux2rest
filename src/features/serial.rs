@@ -1,6 +1,8 @@
 use paperclip::actix::Apiv2Schema;
 use serde::Serialize;
 
+use log::*;
+
 #[derive(Debug, Serialize, Apiv2Schema)]
 pub struct UsbPortInfo {
     /// Vendor ID
@@ -55,73 +57,90 @@ impl SerialPortType {
 #[derive(Debug, Serialize, Apiv2Schema)]
 pub struct PortInfo {
     /// The short name of the serial port
-    pub port_name: String,
+    pub name: String,
     /// The long name of the serial port
-    pub port_by_path: Option<String>,
+    pub by_path: Option<String>,
+    /// Time when by_path was created in ms ago
+    pub by_path_created_ms_ago: Option<u128>,
     /// The hardware device type that exposes this port
+    #[serde(rename = "type")]
     pub port_type: SerialPortType,
     /// Udev information from the device
     pub udev: Option<serde_json::Value>,
 }
 
-#[derive(Default, Debug)]
-struct UdevInfo {
-    by_path: Option<String>,
-    udev: Option<serde_json::Value>,
-}
-
 impl PortInfo {
-    fn fetch_udev(port: &serialport::SerialPortInfo, include_udev: bool) -> UdevInfo {
+    fn fetch_udev(port: &serialport::SerialPortInfo) -> Option<serde_json::Value> {
         let mut udev_enumerator = udev::Enumerator::new().unwrap();
         let udev_result = udev_enumerator.scan_devices().unwrap();
-        let udev_device = udev_result
+        udev_result
             .filter(|device| device.devnode().is_some())
-            .find(|device| device.devnode().unwrap().to_str().unwrap() == port.port_name);
+            .find(|device| device.devnode().unwrap().to_str().unwrap() == port.port_name)
+            .and_then(|device| Some(crate::features::udev::generate_serde_from_device(&device)))
+    }
 
-        if udev_device.is_none() {
-            return UdevInfo {
-                by_path: None,
-                udev: None,
-            };
+    fn fetch_by_path(device_path: &String) -> (Option<String>, Option<u128>) {
+        let mut sym_path = None;
+        let mut time_ago_ms = None;
+        for entry in std::fs::read_dir("/dev/serial/by-path").unwrap() {
+            sym_path = None;
+
+            if let Err(error) = entry {
+                warn!("Failed to open serial by-path folder: {error:#?}");
+                continue;
+            }
+
+            let entry = entry.unwrap();
+            let path = entry.path();
+
+            match std::fs::canonicalize(&path) {
+                Ok(real_path) => {
+                    if real_path.to_string_lossy().to_string() != *device_path {
+                        continue;
+                    }
+                }
+                Err(error) => {
+                    warn!("Failed to get canonical path for {device_path}: {error:#?}");
+                    continue;
+                }
+            }
+
+            sym_path = Some(path.clone());
+
+            let metadata = std::fs::metadata(&path);
+            if let Err(error) = metadata {
+                warn!("Failed to get metadata for {path:#?}: {error:#?}");
+                break;
+            }
+
+            time_ago_ms = Some(
+                std::time::SystemTime::now()
+                    .duration_since(metadata.unwrap().created().unwrap())
+                    .unwrap()
+                    .as_millis(),
+            );
+            break;
         }
 
-        let udev = if include_udev && udev_device.is_some() {
-            Some(crate::features::udev::generate_serde_from_device(
-                &udev_device.as_ref().unwrap(),
-            ))
-        } else {
-            None
-        };
-
-        let udev_device = udev_device.unwrap();
-        let udev_entry = udev_device
-            .properties()
-            .find(|property| property.name() == "DEVLINKS");
-
-        if udev_entry.is_none() {
-            return UdevInfo {
-                by_path: None,
-                udev,
-            };
-        }
-
-        let udev_entry = udev_entry.unwrap();
-        let by_path = udev_entry.value().to_str().unwrap().to_string();
-        let by_path = by_path.split(' ').find(|link| link.contains("by-path"));
-
-        UdevInfo {
-            by_path: by_path.and_then(|value| Some(value.to_string())),
-            udev,
-        }
+        (
+            sym_path.and_then(|path| Some(path.to_string_lossy().to_string())),
+            time_ago_ms,
+        )
     }
 
     fn from(port: &serialport::SerialPortInfo, include_udev: bool) -> Self {
-        let udev_info = PortInfo::fetch_udev(port, include_udev);
+        let (sym_path, time_ago_ms) = PortInfo::fetch_by_path(&port.port_name.clone());
+
         PortInfo {
-            port_name: port.port_name.clone(),
-            port_by_path: udev_info.by_path,
+            name: port.port_name.clone(),
+            by_path: sym_path,
+            by_path_created_ms_ago: time_ago_ms,
             port_type: SerialPortType::from(&port.port_type),
-            udev: udev_info.udev,
+            udev: if include_udev {
+                PortInfo::fetch_udev(port)
+            } else {
+                None
+            },
         }
     }
 }
