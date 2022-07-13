@@ -64,43 +64,64 @@ pub struct PortInfo {
     pub udev: Option<serde_json::Value>,
 }
 
+#[derive(Default, Debug)]
+struct UdevInfo {
+    by_path: Option<String>,
+    udev: Option<serde_json::Value>,
+}
+
 impl PortInfo {
-    fn from(port: &serialport::SerialPortInfo, include_udev: bool) -> Self {
+    fn fetch_udev(port: &serialport::SerialPortInfo, include_udev: bool) -> UdevInfo {
         let mut udev_enumerator = udev::Enumerator::new().unwrap();
         let udev_result = udev_enumerator.scan_devices().unwrap();
         let udev_device = udev_result
             .filter(|device| device.devnode().is_some())
             .find(|device| device.devnode().unwrap().to_str().unwrap() == port.port_name);
 
-        let by_path = if let Some(udev_device) = &udev_device {
-            let udev_entry = udev_device
-                .properties()
-                .find(|property| property.name() == "DEVLINKS");
-            let result = udev_entry
-                .unwrap()
-                .value()
-                .to_str()
-                .unwrap()
-                .split(' ')
-                .find(|link| link.contains("by-path"))
-                .unwrap_or_default()
-                .to_string();
-            Some(result)
+        if udev_device.is_none() {
+            return UdevInfo {
+                by_path: None,
+                udev: None,
+            };
+        }
+
+        let udev = if include_udev && udev_device.is_some() {
+            Some(crate::features::udev::generate_serde_from_device(
+                &udev_device.as_ref().unwrap(),
+            ))
         } else {
             None
         };
 
+        let udev_device = udev_device.unwrap();
+        let udev_entry = udev_device
+            .properties()
+            .find(|property| property.name() == "DEVLINKS");
+
+        if udev_entry.is_none() {
+            return UdevInfo {
+                by_path: None,
+                udev,
+            };
+        }
+
+        let udev_entry = udev_entry.unwrap();
+        let by_path = udev_entry.value().to_str().unwrap().to_string();
+        let by_path = by_path.split(' ').find(|link| link.contains("by-path"));
+
+        UdevInfo {
+            by_path: by_path.and_then(|value| Some(value.to_string())),
+            udev,
+        }
+    }
+
+    fn from(port: &serialport::SerialPortInfo, include_udev: bool) -> Self {
+        let udev_info = PortInfo::fetch_udev(port, include_udev);
         PortInfo {
             port_name: port.port_name.clone(),
-            port_by_path: by_path,
+            port_by_path: udev_info.by_path,
             port_type: SerialPortType::from(&port.port_type),
-            udev: if include_udev && udev_device.is_some() {
-                Some(crate::features::udev::generate_serde_from_device(
-                    &udev_device.unwrap(),
-                ))
-            } else {
-                None
-            },
+            udev: udev_info.udev,
         }
     }
 }
