@@ -113,12 +113,14 @@ impl PortInfo {
                 break;
             }
 
-            time_ago_ms = Some(
-                std::time::SystemTime::now()
-                    .duration_since(metadata.unwrap().created().unwrap())
-                    .unwrap()
-                    .as_millis(),
-            );
+            if let Ok(time_info) = metadata.and_then(|metadata| metadata.modified()) {
+                time_ago_ms = Some(
+                    std::time::SystemTime::now()
+                        .duration_since(time_info)
+                        .unwrap()
+                        .as_millis(),
+                );
+            }
             break;
         }
 
