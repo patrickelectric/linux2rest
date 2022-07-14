@@ -17,7 +17,7 @@ where
     }
 }
 
-struct DeviceUdevProperties<'a> {
+pub struct DeviceUdevProperties<'a> {
     device: &'a udev::Device,
 }
 
