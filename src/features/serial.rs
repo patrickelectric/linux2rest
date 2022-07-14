@@ -30,32 +30,6 @@ impl UsbPortInfo {
 }
 
 #[derive(Debug, Serialize, Apiv2Schema)]
-#[serde(tag = "type")]
-pub enum SerialPortType {
-    /// The serial port is connected via USB
-    UsbPort(UsbPortInfo),
-    /// The serial port is connected via PCI (permanent port)
-    PciPort,
-    /// The serial port is connected via Bluetooth
-    BluetoothPort,
-    /// It can't be determined how the serial port is connected
-    Unknown,
-}
-
-impl SerialPortType {
-    fn from(port_type: &serialport::SerialPortType) -> Self {
-        match port_type {
-            serialport::SerialPortType::UsbPort(usb_port_info) => {
-                SerialPortType::UsbPort(UsbPortInfo::from(usb_port_info))
-            }
-            serialport::SerialPortType::PciPort => SerialPortType::PciPort,
-            serialport::SerialPortType::BluetoothPort => SerialPortType::BluetoothPort,
-            serialport::SerialPortType::Unknown => SerialPortType::Unknown,
-        }
-    }
-}
-
-#[derive(Debug, Serialize, Apiv2Schema)]
 pub struct PortInfo {
     /// The short name of the serial port
     pub name: String,
@@ -63,21 +37,19 @@ pub struct PortInfo {
     pub by_path: Option<String>,
     /// Time when by_path was created in ms ago
     pub by_path_created_ms_ago: Option<u128>,
-    /// The hardware device type that exposes this port
-    #[serde(rename = "type")]
-    pub port_type: SerialPortType,
-    /// Udev information from the device
-    pub udev: Option<serde_json::Value>,
+    /// Udev properties from the device
+    pub udev_properties: Option<serde_json::Value>,
 }
 
 impl PortInfo {
     fn fetch_udev(port: &serialport::SerialPortInfo) -> Option<serde_json::Value> {
-        let mut udev_enumerator = udev::Enumerator::new().unwrap();
-        let udev_result = udev_enumerator.scan_devices().unwrap();
-        udev_result
-            .filter(|device| device.devnode().is_some())
-            .find(|device| device.devnode().unwrap().to_str().unwrap() == port.port_name)
-            .and_then(|device| Some(crate::features::udev::generate_serde_from_device(&device)))
+        match udev::Device::from_syspath(std::path::Path::new(&port.port_name)) {
+            Ok(device) => Some(serde_json::json!(crate::features::udev::DeviceUdevProperties::from(&device))),
+            Err(error) => {
+                warn!("Failed to grab udev information from device: {error:#?}");
+                return None
+            }
+        }
     }
 
     fn fetch_by_path(device_path: &String) -> (Option<String>, Option<u128>) {
@@ -138,12 +110,7 @@ impl PortInfo {
             name: port.port_name.clone(),
             by_path: sym_path,
             by_path_created_ms_ago: time_ago_ms,
-            port_type: SerialPortType::from(&port.port_type),
-            udev: if include_udev {
-                PortInfo::fetch_udev(port)
-            } else {
-                None
-            },
+            udev_properties: PortInfo::fetch_udev(&port),
         }
     }
 }
