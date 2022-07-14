@@ -30,6 +30,7 @@ impl UsbPortInfo {
 }
 
 #[derive(Debug, Serialize, Apiv2Schema)]
+#[serde(tag = "type")]
 pub enum SerialPortType {
     /// The serial port is connected via USB
     UsbPort(UsbPortInfo),
