@@ -43,13 +43,19 @@ pub struct PortInfo {
 
 impl PortInfo {
     fn fetch_udev(port: &serialport::SerialPortInfo) -> Option<serde_json::Value> {
-        match udev::Device::from_syspath(std::path::Path::new(&port.port_name)) {
-            Ok(device) => Some(serde_json::json!(crate::features::udev::DeviceUdevProperties::from(&device))),
-            Err(error) => {
-                warn!("Failed to grab udev information from device: {error:#?}");
-                return None
+        let mut enumerator = udev::Enumerator::new().unwrap();
+        enumerator.match_is_initialized().unwrap();
+        enumerator.match_subsystem("tty").unwrap();
+
+        let port_name = &port.port_name;
+        for device in enumerator.scan_devices().unwrap() {
+            let node = device.devnode();
+            if node.is_some() && node.unwrap().to_string_lossy().to_string() != *port_name {
+                continue
             }
+            return Some(serde_json::json!(crate::features::udev::DeviceUdevProperties::from(&device)));
         }
+        None
     }
 
     fn fetch_by_path(device_path: &String) -> (Option<String>, Option<u128>) {
@@ -118,7 +124,7 @@ impl PortInfo {
             name: port.port_name.clone(),
             by_path: sym_path,
             by_path_created_ms_ago: time_ago_ms,
-            udev_properties: PortInfo::fetch_udev(&port),
+            udev_properties: if include_udev { PortInfo::fetch_udev(&port) } else { None },
         }
     }
 }
