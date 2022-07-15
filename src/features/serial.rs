@@ -51,9 +51,11 @@ impl PortInfo {
         for device in enumerator.scan_devices().unwrap() {
             let node = device.devnode();
             if node.is_some() && node.unwrap().to_string_lossy().to_string() != *port_name {
-                continue
+                continue;
             }
-            return Some(serde_json::json!(crate::features::udev::DeviceUdevProperties::from(&device)));
+            return Some(serde_json::json!(
+                crate::features::udev::DeviceUdevProperties::from(&device)
+            ));
         }
         None
     }
@@ -124,7 +126,11 @@ impl PortInfo {
             name: port.port_name.clone(),
             by_path: sym_path,
             by_path_created_ms_ago: time_ago_ms,
-            udev_properties: if include_udev { PortInfo::fetch_udev(&port) } else { None },
+            udev_properties: if include_udev {
+                PortInfo::fetch_udev(&port)
+            } else {
+                None
+            },
         }
     }
 }
