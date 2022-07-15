@@ -55,7 +55,15 @@ impl PortInfo {
     fn fetch_by_path(device_path: &String) -> (Option<String>, Option<u128>) {
         let mut sym_path = None;
         let mut time_ago_ms = None;
-        for entry in std::fs::read_dir("/dev/serial/by-path").unwrap() {
+        let by_path_dir = "/dev/serial/by-path";
+        let dir = std::fs::read_dir(by_path_dir);
+        if dir.is_err() {
+            let error = dir.err().unwrap();
+            warn!("Failed to look over {by_path_dir}: {error:#?}");
+            return (None, None);
+        }
+
+        for entry in dir.unwrap() {
             sym_path = None;
 
             if let Err(error) = entry {
