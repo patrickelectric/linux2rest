@@ -1,12 +1,13 @@
 use std::sync::{Arc, Mutex};
+use sysinfo::CpuExt;
+use sysinfo::PidExt;
 
 use log::*;
 use paperclip::actix::Apiv2Schema;
 use pnet;
 use serde::Serialize;
 use sysinfo::{
-    ComponentExt, DiskExt, NetworkExt, NetworksExt, ProcessExt, ProcessorExt, System as sysSystem,
-    SystemExt,
+    ComponentExt, DiskExt, NetworkExt, NetworksExt, ProcessExt, System as sysSystem, SystemExt,
 };
 
 lazy_static! {
@@ -104,7 +105,7 @@ pub struct Process {
     root_directory: String,
     used_memory_kB: u64,
     virtual_memory_kB: u64,
-    parent_process: Option<i32>,
+    parent_process: Option<u32>,
     running_time: u64,
     cpu_usage: f32,
     disk_usage: DiskUsage,
@@ -148,7 +149,7 @@ pub fn cpu() -> Vec<Cpu> {
     system.refresh_cpu();
 
     system
-        .processors()
+        .cpus()
         .iter()
         .map(|cpu| Cpu {
             name: cpu.name().into(),
@@ -289,7 +290,7 @@ pub fn process() -> Vec<Process> {
                 root_directory: process.root().to_str().unwrap_or_default().into(),
                 used_memory_kB: process.memory(),
                 virtual_memory_kB: process.virtual_memory(),
-                parent_process: process.parent(),
+                parent_process: process.parent().and_then(|pid| Some(pid.as_u32())),
                 running_time: process.start_time(),
                 cpu_usage: process.cpu_usage(),
                 disk_usage: DiskUsage {

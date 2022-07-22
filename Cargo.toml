@@ -25,7 +25,7 @@ notify = { version = "4.0", optional = true }
 rmesg = { version = "1.0.14", features = ["extra-traits", "sync"] }
 rppal = { version = "0.11.3", optional = true }
 serialport = {version = "4.2.0", features = ["serde"]}
-sysinfo = "0.19"
+sysinfo = "0.24"
 udev = "0.6"
 
 [build-dependencies]
