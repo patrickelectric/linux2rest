@@ -106,7 +106,7 @@ impl PortInfo {
                 time_ago_ms = Some(
                     std::time::SystemTime::now()
                         .duration_since(time_info)
-                        .unwrap()
+                        .unwrap_or_default()
                         .as_millis(),
                 );
             }
