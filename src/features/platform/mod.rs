@@ -1,3 +1,4 @@
+use cached::proc_macro::cached;
 use paperclip::actix::Apiv2Schema;
 use serde::Serialize;
 
@@ -27,6 +28,7 @@ pub struct Platform {
 #[derive(Clone, Serialize, Apiv2Schema)]
 pub struct Platform {}
 
+#[cached(time = 5)]
 pub fn platform() -> Result<Platform, String> {
     #[cfg(feature = "raspberry")]
     {

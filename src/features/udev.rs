@@ -1,3 +1,4 @@
+use cached::proc_macro::cached;
 use serde::{
     ser::{SerializeMap, SerializeStruct},
     Serialize, Serializer,
@@ -100,6 +101,7 @@ pub struct Device {
     attributes: std::iter::Map<String, String>,
 }*/
 
+#[cached(time = 10)]
 pub fn generate_serde_value() -> Vec<serde_json::Value> {
     let mut enumerator = udev::Enumerator::new().unwrap();
     let result = enumerator.scan_devices().unwrap();

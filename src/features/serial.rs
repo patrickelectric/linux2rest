@@ -1,9 +1,10 @@
+use cached::proc_macro::cached;
 use paperclip::actix::Apiv2Schema;
 use serde::Serialize;
 
 use log::*;
 
-#[derive(Debug, Serialize, Apiv2Schema)]
+#[derive(Clone, Debug, Serialize, Apiv2Schema)]
 pub struct UsbPortInfo {
     /// Vendor ID
     pub vid: u16,
@@ -29,7 +30,7 @@ impl UsbPortInfo {
     }
 }
 
-#[derive(Debug, Serialize, Apiv2Schema)]
+#[derive(Clone, Debug, Serialize, Apiv2Schema)]
 pub struct PortInfo {
     /// The short name of the serial port
     pub name: String,
@@ -135,12 +136,12 @@ impl PortInfo {
     }
 }
 
-#[derive(Debug, Serialize, Apiv2Schema)]
+#[derive(Clone, Debug, Serialize, Apiv2Schema)]
 pub struct SerialPorts {
     ports: Vec<PortInfo>,
 }
 
-//device_node
+#[cached(time = 5)]
 pub fn serial(udev: Option<bool>) -> SerialPorts {
     SerialPorts {
         ports: serialport::available_ports()

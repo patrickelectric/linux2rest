@@ -2,6 +2,7 @@ use std::sync::{Arc, Mutex};
 use sysinfo::CpuExt;
 use sysinfo::PidExt;
 
+use cached::proc_macro::cached;
 use log::*;
 use paperclip::actix::Apiv2Schema;
 use pnet;
@@ -14,7 +15,7 @@ lazy_static! {
     static ref SYSTEM: Arc<Mutex<sysSystem>> = Arc::new(Mutex::new(sysSystem::new()));
 }
 
-#[derive(Debug, Serialize, Apiv2Schema)]
+#[derive(Clone, Debug, Serialize, Apiv2Schema)]
 pub struct Cpu {
     name: String,
     usage: f32,
@@ -23,7 +24,7 @@ pub struct Cpu {
     brand: String,
 }
 
-#[derive(Debug, Serialize, Apiv2Schema)]
+#[derive(Clone, Debug, Serialize, Apiv2Schema)]
 pub struct Disk {
     name: String,
     filesystem_type: String,
@@ -34,7 +35,7 @@ pub struct Disk {
     total_space_B: u64,
 }
 
-#[derive(Debug, Serialize, Apiv2Schema)]
+#[derive(Clone, Debug, Serialize, Apiv2Schema)]
 pub struct OsInfo {
     system_name: String,
     kernel_version: String,
@@ -42,19 +43,19 @@ pub struct OsInfo {
     host_name: String,
 }
 
-#[derive(Debug, Serialize, Apiv2Schema)]
+#[derive(Clone, Debug, Serialize, Apiv2Schema)]
 pub struct MemoryUsage {
     used_kB: u64,
     total_kB: u64,
 }
 
-#[derive(Debug, Serialize, Apiv2Schema)]
+#[derive(Clone, Debug, Serialize, Apiv2Schema)]
 pub struct Memory {
     ram: MemoryUsage,
     swap: MemoryUsage,
 }
 
-#[derive(Debug, Serialize, Apiv2Schema)]
+#[derive(Clone, Debug, Serialize, Apiv2Schema)]
 pub struct Network {
     name: String,
     description: String,
@@ -85,7 +86,7 @@ pub struct Network {
 }
 
 //TODO: be consistent between _B, _b and bytes
-#[derive(Debug, Serialize, Apiv2Schema)]
+#[derive(Clone, Debug, Serialize, Apiv2Schema)]
 pub struct DiskUsage {
     total_written_bytes: u64,
     written_bytes: u64,
@@ -93,7 +94,7 @@ pub struct DiskUsage {
     read_bytes: u64,
 }
 
-#[derive(Debug, Serialize, Apiv2Schema)]
+#[derive(Clone, Debug, Serialize, Apiv2Schema)]
 pub struct Process {
     name: String,
     pid: i32,
@@ -111,7 +112,7 @@ pub struct Process {
     disk_usage: DiskUsage,
 }
 
-#[derive(Debug, Serialize, Apiv2Schema)]
+#[derive(Clone, Debug, Serialize, Apiv2Schema)]
 pub struct Temperature {
     name: String,
     temperature: f32,
@@ -119,7 +120,7 @@ pub struct Temperature {
     critical_temperature: Option<f32>,
 }
 
-#[derive(Debug, Serialize, Apiv2Schema)]
+#[derive(Clone, Debug, Serialize, Apiv2Schema)]
 pub struct System {
     cpu: Vec<Cpu>,
     disk: Vec<Disk>,
@@ -144,6 +145,7 @@ pub fn system() -> System {
     }
 }
 
+#[cached(time = 5)]
 pub fn cpu() -> Vec<Cpu> {
     let mut system = SYSTEM.lock().unwrap();
     system.refresh_cpu();
@@ -161,6 +163,7 @@ pub fn cpu() -> Vec<Cpu> {
         .collect::<Vec<Cpu>>()
 }
 
+#[cached(time = 5)]
 pub fn disk() -> Vec<Disk> {
     let mut system = SYSTEM.lock().unwrap();
     system.refresh_disks_list();
@@ -182,6 +185,7 @@ pub fn disk() -> Vec<Disk> {
         .collect::<Vec<Disk>>()
 }
 
+#[cached(time = 5)]
 pub fn info() -> OsInfo {
     let system = SYSTEM.lock().unwrap();
 
@@ -193,6 +197,7 @@ pub fn info() -> OsInfo {
     }
 }
 
+#[cached(time = 5)]
 pub fn memory() -> Memory {
     let mut system = SYSTEM.lock().unwrap();
     system.refresh_memory();
@@ -209,6 +214,7 @@ pub fn memory() -> Memory {
     }
 }
 
+#[cached(time = 5)]
 pub fn network() -> Vec<Network> {
     let mut system = SYSTEM.lock().unwrap();
     system.refresh_networks();
@@ -271,6 +277,7 @@ pub fn network() -> Vec<Network> {
         .collect::<Vec<Network>>()
 }
 
+#[cached(time = 5)]
 pub fn process() -> Vec<Process> {
     let mut system = SYSTEM.lock().unwrap();
     system.refresh_processes();
@@ -304,6 +311,7 @@ pub fn process() -> Vec<Process> {
         .collect::<Vec<Process>>()
 }
 
+#[cached(time = 5)]
 pub fn temperature() -> Vec<Temperature> {
     let mut system = SYSTEM.lock().unwrap();
     system.refresh_components();
