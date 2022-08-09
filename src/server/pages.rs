@@ -3,6 +3,7 @@ use actix_web::{
     HttpRequest, HttpResponse,
 };
 use actix_web_actors::ws;
+use cached::proc_macro::cached;
 use log::*;
 use paperclip::actix::api_v2_operation;
 use paperclip::actix::Apiv2Schema;
@@ -57,6 +58,7 @@ pub fn kernel_buffer(
     Json(features::kernel::messages(query.start, query.size))
 }
 
+#[cached(time = 10)]
 #[api_v2_operation]
 /// Provides the same output as netstat: TCP/UDP ports that are in use and who is using it
 pub fn netstat(req: HttpRequest) -> Json<features::netstat::Netstat> {
@@ -70,6 +72,7 @@ pub struct SerialQuery {
     udev: Option<bool>,
 }
 
+#[cached(time = 5)]
 #[api_v2_operation]
 /// Provides information about serial ports
 pub async fn serial(
@@ -83,6 +86,7 @@ pub async fn serial(
     Json(features::serial::serial(query.udev))
 }
 
+#[cached(time = 5)]
 #[api_v2_operation]
 /// Provides system information: cpu, disk, operating system, memory, network, processes, sensors
 pub async fn system(req: HttpRequest) -> Json<features::system::System> {
@@ -91,6 +95,7 @@ pub async fn system(req: HttpRequest) -> Json<features::system::System> {
     Json(features::system::system())
 }
 
+#[cached(time = 1)]
 #[api_v2_operation]
 /// Provides system information for cpu only
 pub async fn system_cpu(req: HttpRequest) -> Json<Vec<features::system::Cpu>> {
@@ -99,6 +104,7 @@ pub async fn system_cpu(req: HttpRequest) -> Json<Vec<features::system::Cpu>> {
     Json(features::system::cpu())
 }
 
+#[cached(time = 1)]
 #[api_v2_operation]
 /// Provides system information for disk only
 pub async fn system_disk(req: HttpRequest) -> Json<Vec<features::system::Disk>> {
@@ -107,6 +113,7 @@ pub async fn system_disk(req: HttpRequest) -> Json<Vec<features::system::Disk>> 
     Json(features::system::disk())
 }
 
+#[cached(time = 1)]
 #[api_v2_operation]
 /// Provides system information from operating system only
 pub async fn system_info(req: HttpRequest) -> Json<features::system::OsInfo> {
@@ -115,6 +122,7 @@ pub async fn system_info(req: HttpRequest) -> Json<features::system::OsInfo> {
     Json(features::system::info())
 }
 
+#[cached(time = 5)]
 #[api_v2_operation]
 /// Provides system information for memory only
 pub async fn system_memory(req: HttpRequest) -> Json<features::system::Memory> {
@@ -123,6 +131,7 @@ pub async fn system_memory(req: HttpRequest) -> Json<features::system::Memory> {
     Json(features::system::memory())
 }
 
+#[cached(time = 5)]
 #[api_v2_operation]
 /// Provides system information for network only
 pub async fn system_network(req: HttpRequest) -> Json<Vec<features::system::Network>> {
@@ -131,6 +140,7 @@ pub async fn system_network(req: HttpRequest) -> Json<Vec<features::system::Netw
     Json(features::system::network())
 }
 
+#[cached(time = 5)]
 #[api_v2_operation]
 /// Provides system information for processes only
 pub async fn system_process(req: HttpRequest) -> Json<Vec<features::system::Process>> {
@@ -139,6 +149,7 @@ pub async fn system_process(req: HttpRequest) -> Json<Vec<features::system::Proc
     Json(features::system::process())
 }
 
+#[cached(time = 5)]
 #[api_v2_operation]
 /// Provides system information for sensors only
 pub async fn system_temperature(req: HttpRequest) -> Json<Vec<features::system::Temperature>> {
@@ -157,6 +168,7 @@ pub async fn system_unix_time_seconds(req: HttpRequest) -> HttpResponse {
         .body(features::system::unix_time_seconds().to_string())
 }
 
+#[cached(time = 10)]
 #[api_v2_operation]
 /// (WIP) Provides information about all devices connected to the main computer
 pub fn udev(req: HttpRequest) -> HttpResponse {
@@ -167,6 +179,7 @@ pub fn udev(req: HttpRequest) -> HttpResponse {
         .body(serde_json::to_string_pretty(&features::udev::generate_serde_value()).unwrap())
 }
 
+#[cached(time = 5)]
 #[api_v2_operation]
 /// Provide platform specific information
 pub async fn platform(req: HttpRequest) -> HttpResponse {
