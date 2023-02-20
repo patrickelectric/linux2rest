@@ -1,6 +1,6 @@
 [package]
 name = "linux2rest"
-version = "0.4.6"
+version = "0.4.7"
 authors = ["Patrick José Pereira <patrickelectric@gmail.com>"]
 edition = "2018"
 
