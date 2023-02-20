@@ -97,7 +97,7 @@ pub struct DiskUsage {
 #[derive(Clone, Debug, Serialize, Apiv2Schema)]
 pub struct Process {
     name: String,
-    pid: i32,
+    pid: u32,
     status: String,
     command: Vec<String>,
     executable_path: String,
@@ -288,7 +288,7 @@ pub fn process() -> Vec<Process> {
             let disk_usage = process.disk_usage();
             Process {
                 name: process.name().into(),
-                pid: process.pid().into(),
+                pid: process.pid().as_u32(),
                 status: format!("{:?}", process.status()),
                 command: process.cmd().into(),
                 executable_path: process.exe().to_str().unwrap_or_default().into(),
