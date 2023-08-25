@@ -177,7 +177,7 @@ pub fn disk() -> Vec<Disk> {
             filesystem_type: std::str::from_utf8(disk.file_system())
                 .unwrap_or_default()
                 .into(),
-            disk_type: format!("{:?}", disk.type_()),
+            disk_type: format!("{:?}", disk.kind()),
             mount_point: disk.mount_point().to_str().unwrap_or_default().into(),
             available_space_B: disk.available_space().into(),
             total_space_B: disk.total_space().into(),
