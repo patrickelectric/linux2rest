@@ -1,5 +1,6 @@
 use std::sync::{Arc, Mutex};
 use sysinfo::CpuExt;
+use sysinfo::CpuRefreshKind;
 use sysinfo::PidExt;
 
 use cached::proc_macro::cached;
@@ -148,7 +149,7 @@ pub fn system() -> System {
 #[cached(time = 5)]
 pub fn cpu() -> Vec<Cpu> {
     let mut system = SYSTEM.lock().unwrap();
-    system.refresh_cpu();
+    system.refresh_cpu_specifics(CpuRefreshKind::everything());
 
     system
         .cpus()
