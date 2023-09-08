@@ -150,11 +150,6 @@ pub fn system() -> System {
 pub fn cpu() -> Vec<Cpu> {
     let mut system = SYSTEM.lock().unwrap();
     system.refresh_cpu_specifics(CpuRefreshKind::everything());
-    std::thread::sleep(
-        sysSystem::MINIMUM_CPU_UPDATE_INTERVAL + std::time::Duration::from_millis(10),
-    );
-    system.refresh_cpu_specifics(CpuRefreshKind::everything());
-
     system
         .cpus()
         .iter()
@@ -285,10 +280,6 @@ pub fn network() -> Vec<Network> {
 #[cached(time = 5)]
 pub fn process() -> Vec<Process> {
     let mut system = SYSTEM.lock().unwrap();
-    system.refresh_processes();
-    std::thread::sleep(
-        sysSystem::MINIMUM_CPU_UPDATE_INTERVAL + std::time::Duration::from_millis(10),
-    );
     system.refresh_processes();
     system
         .processes()
