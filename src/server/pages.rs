@@ -3,7 +3,7 @@ use actix_web::{
     HttpRequest, HttpResponse,
 };
 use actix_web_actors::ws;
-use log::*;
+use tracing::*;
 use paperclip::actix::api_v2_operation;
 use paperclip::actix::Apiv2Schema;
 use serde::Deserialize;

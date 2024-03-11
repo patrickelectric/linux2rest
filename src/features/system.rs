@@ -4,7 +4,7 @@ use sysinfo::CpuRefreshKind;
 use sysinfo::PidExt;
 
 use cached::proc_macro::cached;
-use log::*;
+use tracing::*;
 use paperclip::actix::Apiv2Schema;
 use pnet;
 use serde::Serialize;
