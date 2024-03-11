@@ -13,6 +13,10 @@ pub struct Arguments {
     #[structopt(short, long)]
     pub verbose: bool,
 
+    /// Specifies the path in witch the logs will be stored.
+    #[structopt(long, default_value = "./logs")]
+    pub log_path: String,
+
     /// Port to be used for REST API server
     #[structopt(long, default_value = "6030")]
     pub port: u16,
