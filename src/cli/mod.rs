@@ -29,3 +29,7 @@ lazy_static! {
 pub fn args() -> Arc<Arguments> {
     ARGS.clone()
 }
+
+pub fn command_line_string() -> String {
+    std::env::args().collect::<Vec<String>>().join(" ")
+}
