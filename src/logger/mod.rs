@@ -1,44 +1,63 @@
-use log::*;
-use std::io::Write;
-
 use crate::cli;
-use env_logger::fmt::{Color, Style, StyledValue};
 
-// Change style based on the message log level
-fn colored_level<'a>(style: &'a mut Style, level: Level) -> StyledValue<'a, &'static str> {
-    match level {
-        Level::Trace => style.set_color(Color::Magenta).value("TRACE"),
-        Level::Debug => style.set_color(Color::Blue).value("DEBUG"),
-        Level::Info => style.set_color(Color::Green).value("INFO "),
-        Level::Warn => style.set_color(Color::Yellow).value("WARN "),
-        Level::Error => style.set_color(Color::Red).value("ERROR"),
-    }
-}
+use tracing::{metadata::LevelFilter, *};
+use tracing_log::LogTracer;
+use tracing_subscriber::{fmt, layer::SubscriberExt, EnvFilter, Layer};
 
 // Start logger, should be done inside main
 pub fn init() {
-    let default_filter = if cli::args().as_ref().verbose {
-        "debug"
-    } else {
-        "info"
-    };
-    env_logger::Builder::from_env(env_logger::Env::default().default_filter_or(default_filter))
-        .format(|buf, record| {
-            let mut style = buf.style();
-            let level = colored_level(&mut style, record.level());
-            let mut style = buf.style();
-            let message = style.set_bold(true).value(record.args());
-            writeln!(
-                buf,
-                "{} {} {}:{}: {}",
-                level,
-                chrono::Local::now().format("%H:%M:%S.%3f"),
-                record.file().unwrap_or("unknown"),
-                record.line().unwrap_or(0),
-                message,
-            )
+    // Redirect all logs from libs using "Log"
+    LogTracer::init_with_filter(tracing::log::LevelFilter::Trace).expect("Failed to set logger");
+
+    let verbose = cli::args().as_ref().verbose;
+
+    // Configure the console log
+    let console_env_filter = EnvFilter::try_from_default_env()
+        .unwrap_or_else(|_| {
+            if verbose {
+                EnvFilter::new(LevelFilter::DEBUG.to_string())
+            } else {
+                EnvFilter::new(LevelFilter::INFO.to_string())
+            }
         })
-        .init();
+        // Hyper is used for http request by our thread leak test
+        // And it's pretty verbose when it's on
+        .add_directive("hyper=off".parse().unwrap());
+    let console_layer = fmt::Layer::new()
+        .with_writer(std::io::stdout)
+        .with_ansi(true)
+        .with_file(true)
+        .with_line_number(true)
+        .with_span_events(fmt::format::FmtSpan::NONE)
+        .with_target(false)
+        .with_thread_ids(true)
+        .with_thread_names(true)
+        .with_filter(console_env_filter);
+
+    // Configure the file log
+    let file_env_filter = if verbose {
+        EnvFilter::new(LevelFilter::TRACE.to_string())
+    } else {
+        EnvFilter::new(LevelFilter::DEBUG.to_string())
+    };
+    let dir = cli::args().as_ref().log_path.clone();
+    let file_appender = tracing_appender::rolling::hourly(dir, "mavlink-camera-manager.", ".log");
+    let file_layer = fmt::Layer::new()
+        .with_writer(file_appender)
+        .with_ansi(false)
+        .with_file(true)
+        .with_line_number(true)
+        .with_span_events(fmt::format::FmtSpan::NONE)
+        .with_target(false)
+        .with_thread_ids(true)
+        .with_thread_names(true)
+        .with_filter(file_env_filter);
+
+    let subscriber = tracing_subscriber::registry()
+        .with(console_layer)
+        .with(file_layer);
+    tracing::subscriber::set_global_default(subscriber)
+        .expect("Unable to set a global subscriber");
 
     info!(
         "{}, version: {}-{}, build date: {}",
@@ -51,5 +70,5 @@ pub fn init() {
         "Starting at {}",
         chrono::Local::now().format("%Y-%m-%dT%H:%M:%S"),
     );
-    debug!("Configuration: {:#?}", cli::args().as_ref());
+    debug!("Command line call: {}", cli::command_line_string());
 }
