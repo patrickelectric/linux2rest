@@ -2,10 +2,12 @@ mod pages;
 
 use actix_web::{rt::System, App, HttpServer};
 use paperclip::actix::{web, OpenApiExt};
+use tracing::*;
 
 // Start REST API server with the desired address
 pub fn run(server_address: &str) {
     let server_address = server_address.to_string();
+    debug!("Starting server at: {server_address}");
 
     // Start HTTP server thread
     let system = System::new("http-server");
