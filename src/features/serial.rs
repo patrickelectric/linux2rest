@@ -2,7 +2,7 @@ use cached::proc_macro::cached;
 use paperclip::actix::Apiv2Schema;
 use serde::Serialize;
 
-use log::*;
+use tracing::*;
 
 #[derive(Clone, Debug, Serialize, Apiv2Schema)]
 pub struct UsbPortInfo {

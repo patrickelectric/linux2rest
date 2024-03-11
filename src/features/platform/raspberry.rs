@@ -1,7 +1,7 @@
 use std::sync::{mpsc::channel, Arc, Mutex, Once};
 
 use chrono;
-use log::*;
+use tracing::*;
 use notify::{RecommendedWatcher, RecursiveMode, Watcher};
 use paperclip::actix::Apiv2Schema;
 use serde::Serialize;

@@ -1,6 +1,6 @@
 use futures::channel::mpsc::{channel, Receiver, Sender};
 use futures::SinkExt;
-use log::*;
+use tracing::*;
 use paperclip::actix::Apiv2Schema;
 use serde::Serialize;
 use std::sync::{Arc, Mutex};

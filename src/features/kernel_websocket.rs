@@ -5,7 +5,7 @@ use actix_web_actors::ws;
 use futures::channel::mpsc::Receiver;
 use serde::Serialize;
 
-use log::*;
+use tracing::*;
 
 use std::sync::{Arc, Mutex};
 
