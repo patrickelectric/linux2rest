@@ -56,8 +56,7 @@ pub fn init() {
     let subscriber = tracing_subscriber::registry()
         .with(console_layer)
         .with(file_layer);
-    tracing::subscriber::set_global_default(subscriber)
-        .expect("Unable to set a global subscriber");
+    tracing::subscriber::set_global_default(subscriber).expect("Unable to set a global subscriber");
 
     info!(
         "{}, version: {}-{}, build date: {}",
