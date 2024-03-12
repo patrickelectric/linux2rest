@@ -81,7 +81,7 @@ jobs:
           ${{ runner.os }}-cargo-armv7-${{ hashFiles('Cargo.toml') }}-${{ hashFiles('Cargo.lock') }}
           ${{ runner.os }}-cargo-armv7-${{ hashFiles('Cargo.toml') }}
           ${{ runner.os }}-cargo-armv7
-    - uses: uraimo/run-on-arch-action@v2.0.5
+    - uses: uraimo/run-on-arch-action@v2.7.1
       id: runcmd
       with:
         arch: armv7
