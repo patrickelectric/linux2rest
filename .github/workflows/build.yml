@@ -101,7 +101,7 @@ jobs:
         run: |
           export SCCACHE_DIR=/tmp/.cache
           export PATH="$HOME/.cargo/bin:$PATH"
-          apt install -y pkg-config libudev-dev libssl-dev openssl
+          apt install -y pkg-config libudev-dev libssl-dev openssl git
           sccache --show-stats
           # Fix issues related to git unable to use current directory since its not from current user
           git config --global --add safe.directory '*'
