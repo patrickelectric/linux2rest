@@ -4,13 +4,13 @@ use sysinfo::CpuRefreshKind;
 use sysinfo::PidExt;
 
 use cached::proc_macro::cached;
-use tracing::*;
 use paperclip::actix::Apiv2Schema;
 use pnet;
 use serde::Serialize;
 use sysinfo::{
     ComponentExt, DiskExt, NetworkExt, NetworksExt, ProcessExt, System as sysSystem, SystemExt,
 };
+use tracing::*;
 
 lazy_static! {
     static ref SYSTEM: Arc<Mutex<sysSystem>> = Arc::new(Mutex::new(sysSystem::new()));
