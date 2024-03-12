@@ -1886,6 +1886,7 @@ dependencies = [
  "actix",
  "actix-web 3.3.3",
  "actix-web-actors",
+ "anyhow",
  "cached",
  "chrono",
  "futures",
@@ -1900,8 +1901,12 @@ dependencies = [
  "serde",
  "serde_json",
  "serialport",
+ "sinais",
  "structopt",
+ "strum 0.26.2",
+ "strum_macros 0.26.2",
  "sysinfo",
+ "tokio 1.36.0",
  "tracing",
  "tracing-actix-web",
  "tracing-appender",
@@ -3280,6 +3285,31 @@ dependencies = [
 ]
 
 [[package]]
+name = "sinais"
+version = "0.1.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "a6d90556b534662fd02b3a10b5580795172ec0d9c015ae4c5add91e14f291972"
+dependencies = [
+ "lazy_static",
+ "sinais_macro",
+ "tokio 1.36.0",
+ "tracing",
+ "uuid",
+]
+
+[[package]]
+name = "sinais_macro"
+version = "0.1.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "71e1e835b568af54d41ac2bd63934d15f338537d07e8455eaf93bc440866e52d"
+dependencies = [
+ "proc-macro2",
+ "quote",
+ "syn 2.0.52",
+ "tokio 1.36.0",
+]
+
+[[package]]
 name = "slab"
 version = "0.4.9"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -3416,6 +3446,15 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "063e6045c0e62079840579a7e47a355ae92f60eb74daaf156fb1e84ba164e63f"
 
 [[package]]
+name = "strum"
+version = "0.26.2"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "5d8cec3501a5194c432b2b7976db6b7d10ec95c253208b45f83f7136aa985e29"
+dependencies = [
+ "strum_macros 0.26.2",
+]
+
+[[package]]
 name = "strum_macros"
 version = "0.22.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -3438,6 +3477,19 @@ dependencies = [
  "quote",
  "rustversion",
  "syn 1.0.109",
+]
+
+[[package]]
+name = "strum_macros"
+version = "0.26.2"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "c6cf59daf282c0a494ba14fd21610a0325f9f90ec9d1231dea26bcb1d696c946"
+dependencies = [
+ "heck 0.4.1",
+ "proc-macro2",
+ "quote",
+ "rustversion",
+ "syn 2.0.52",
 ]
 
 [[package]]
@@ -4078,6 +4130,7 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "f00cc9702ca12d3c81455259621e676d0f7251cec66a21e98fe2e9a37db93b2a"
 dependencies = [
  "getrandom 0.2.12",
+ "rand 0.8.5",
 ]
 
 [[package]]
