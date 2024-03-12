@@ -1,10 +1,10 @@
 use std::sync::{mpsc::channel, Arc, Mutex, Once};
 
 use chrono;
-use tracing::*;
 use notify::{RecommendedWatcher, RecursiveMode, Watcher};
 use paperclip::actix::Apiv2Schema;
 use serde::Serialize;
+use tracing::*;
 
 #[derive(Clone, Serialize, Apiv2Schema)]
 pub enum EventType {
