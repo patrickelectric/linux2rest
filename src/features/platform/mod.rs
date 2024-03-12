@@ -11,7 +11,7 @@ pub fn start() {
 }
 
 #[cfg(feature = "raspberry")]
-#[derive(Clone, Serialize, Apiv2Schema)]
+#[derive(Debug, Clone, Serialize, Apiv2Schema)]
 pub struct Raspberry {
     model: String,
     soc: String,
@@ -19,13 +19,13 @@ pub struct Raspberry {
 }
 
 #[cfg(feature = "raspberry")]
-#[derive(Clone, Serialize, Apiv2Schema)]
+#[derive(Debug, Clone, Serialize, Apiv2Schema)]
 pub struct Platform {
     raspberry: Raspberry,
 }
 
 #[cfg(not(feature = "raspberry"))]
-#[derive(Clone, Serialize, Apiv2Schema)]
+#[derive(Debug, Clone, Serialize, Apiv2Schema)]
 pub struct Platform {}
 
 #[cached(time = 5)]
