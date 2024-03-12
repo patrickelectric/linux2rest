@@ -103,6 +103,8 @@ jobs:
           export PATH="$HOME/.cargo/bin:$PATH"
           apt install -y pkg-config libudev-dev libssl-dev openssl
           sccache --show-stats
+          # Fix issues related to git unable to use current directory since its not from current user
+          git config --global --add safe.directory '*'
           RUSTC_WRAPPER=sccache cargo build --verbose --release --features raspberry
           sccache --show-stats
     - name: Rename
