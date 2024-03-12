@@ -1,10 +1,10 @@
 use futures::channel::mpsc::{channel, Receiver, Sender};
 use futures::SinkExt;
-use tracing::*;
 use paperclip::actix::Apiv2Schema;
 use serde::Serialize;
 use std::sync::{Arc, Mutex};
 use std::thread;
+use tracing::*;
 
 #[derive(Clone, Serialize, PartialEq, Apiv2Schema)]
 pub struct KernelMessage {
