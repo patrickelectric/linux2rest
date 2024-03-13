@@ -6,7 +6,7 @@ use paperclip::actix::Apiv2Schema;
 use serde::Serialize;
 use tracing::*;
 
-#[derive(Clone, Serialize, Apiv2Schema)]
+#[derive(Clone, Debug, Serialize, Apiv2Schema)]
 pub enum EventType {
     FrequencyCapping,
     TemperatureLimit,
@@ -14,14 +14,14 @@ pub enum EventType {
     UnderVoltage,
 }
 
-#[derive(Clone, Serialize, Apiv2Schema)]
+#[derive(Clone, Debug, Serialize, Apiv2Schema)]
 pub struct Event {
     pub time: chrono::DateTime<chrono::Local>,
     #[serde(rename = "type")]
     pub typ: EventType,
 }
 
-#[derive(Clone, Default, Serialize, Apiv2Schema)]
+#[derive(Clone, Debug, Default, Serialize, Apiv2Schema)]
 pub struct Events {
     pub occurring: Vec<Event>,
     pub list: Vec<Event>,
