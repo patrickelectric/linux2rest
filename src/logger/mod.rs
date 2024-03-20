@@ -41,7 +41,7 @@ pub fn init() {
         EnvFilter::new(LevelFilter::DEBUG.to_string())
     };
     let dir = cli::args().as_ref().log_path.clone();
-    let file_appender = tracing_appender::rolling::hourly(dir, "mavlink-camera-manager.", ".log");
+    let file_appender = tracing_appender::rolling::hourly(dir, "linux2rest.", ".log");
     let file_layer = fmt::Layer::new()
         .with_writer(file_appender)
         .with_ansi(false)
