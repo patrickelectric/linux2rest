@@ -70,8 +70,8 @@ impl Serialize for DeviceUdevAttributes<'_> {
             let name = attribute.name();
             let value = attribute.value();
             map.insert(
-                name.to_str().unwrap().to_string(),
-                value.to_str().unwrap().to_string(),
+                name.to_str().unwrap_or_default().to_string(),
+                value.to_str().unwrap_or_default().to_string(),
             );
         }
         let mut state = serializer.serialize_map(Some(map.len()))?;
