@@ -3,6 +3,7 @@ use crate::features;
 
 use sinais::{Signal, SignalNoClone, _spawn};
 use tokio::time::{sleep, Duration};
+use tracing::*;
 
 pub fn start() {
     let categories = cli::args().as_ref().log_settings.clone();
@@ -20,37 +21,37 @@ pub fn start() {
 
                 match category {
                     cli::LogSetting::Netstat => {
-                        dbg!(features::netstat::netstat());
+                        info!("{}: {:#?}", category, features::netstat::netstat());
                     }
                     cli::LogSetting::Platform => {
-                        dbg!(features::platform::platform());
+                        info!("{}: {:#?}", category, features::platform::platform());
                     }
                     cli::LogSetting::SerialPorts => {
-                        dbg!(features::serial::serial(None));
+                        info!("{}: {:#?}", category, features::serial::serial(None));
                     }
                     cli::LogSetting::SystemCpu => {
-                        dbg!(features::system::cpu());
+                        info!("{}: {:#?}", category, features::system::cpu());
                     }
                     cli::LogSetting::SystemDisk => {
-                        dbg!(features::system::disk());
+                        info!("{}: {:#?}", category, features::system::disk());
                     }
                     cli::LogSetting::SystemInfo => {
-                        dbg!(features::system::info());
+                        info!("{}: {:#?}", category, features::system::info());
                     }
                     cli::LogSetting::SystemMemory => {
-                        dbg!(features::system::memory());
+                        info!("{}: {:#?}", category, features::system::memory());
                     }
                     cli::LogSetting::SystemNetwork => {
-                        dbg!(features::system::network());
+                        info!("{}: {:#?}", category, features::system::network());
                     }
                     cli::LogSetting::SystemProcess => {
-                        dbg!(features::system::process());
+                        info!("{}: {:#?}", category, features::system::process());
                     }
                     cli::LogSetting::SystemTemperature => {
-                        dbg!(features::system::temperature());
+                        info!("{}: {:#?}", category, features::system::temperature());
                     }
                     cli::LogSetting::SystemUnixTimeSeconds => {
-                        dbg!(features::system::unix_time_seconds());
+                        info!("{}: {:#?}", category, features::system::unix_time_seconds());
                     }
                 }
             }
