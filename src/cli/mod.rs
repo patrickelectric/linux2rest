@@ -42,7 +42,7 @@ pub struct Arguments {
 
     /// Set logging intervals for various services in a comma-separated list (e.g., "system-cpu=10,system-disk=30")
     /// Valid keys are: netstat, platform, serial-ports, system-cpu, system-disk, system-info, system-memory, system-network, system-process, system-temperature, system-unix-time-seconds
-    #[structopt(long, parse(try_from_str = parse_log_settings))]
+    #[structopt(long, parse(try_from_str = parse_log_settings), default_value="")]
     pub log_settings: HashMap<LogSetting, u64>,
 }
 
@@ -59,6 +59,11 @@ pub fn command_line_string() -> String {
 }
 
 fn parse_log_settings(s: &str) -> Result<HashMap<LogSetting, u64>> {
+    let clean_string = s.trim();
+    if clean_string.is_empty() {
+        return Ok(HashMap::new());
+    }
+
     let pairs = s.split(',');
     let mut settings = HashMap::new();
 
