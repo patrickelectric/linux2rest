@@ -1,9 +1,15 @@
 use crate::cli;
 use crate::features;
 
+use serde::Serialize;
 use sinais::{Signal, SignalNoClone, _spawn};
 use tokio::time::{sleep, Duration};
 use tracing::*;
+
+pub fn print<T: Serialize>(category: &cli::LogSetting, data: T) {
+    let json = serde_json::to_string(&data).unwrap();
+    info!("{category}: {json}");
+}
 
 pub fn start() {
     let categories = cli::args().as_ref().log_settings.clone();
@@ -21,37 +27,37 @@ pub fn start() {
 
                 match category {
                     cli::LogSetting::Netstat => {
-                        info!("{}: {:#?}", category, features::netstat::netstat());
+                        print(category, features::netstat::netstat());
                     }
                     cli::LogSetting::Platform => {
-                        info!("{}: {:#?}", category, features::platform::platform());
+                        print(category, features::platform::platform());
                     }
                     cli::LogSetting::SerialPorts => {
-                        info!("{}: {:#?}", category, features::serial::serial(None));
+                        print(category, features::serial::serial(None));
                     }
                     cli::LogSetting::SystemCpu => {
-                        info!("{}: {:#?}", category, features::system::cpu());
+                        print(category, features::system::cpu());
                     }
                     cli::LogSetting::SystemDisk => {
-                        info!("{}: {:#?}", category, features::system::disk());
+                        print(category, features::system::disk());
                     }
                     cli::LogSetting::SystemInfo => {
-                        info!("{}: {:#?}", category, features::system::info());
+                        print(category, features::system::info());
                     }
                     cli::LogSetting::SystemMemory => {
-                        info!("{}: {:#?}", category, features::system::memory());
+                        print(category, features::system::memory());
                     }
                     cli::LogSetting::SystemNetwork => {
-                        info!("{}: {:#?}", category, features::system::network());
+                        print(category, features::system::network());
                     }
                     cli::LogSetting::SystemProcess => {
-                        info!("{}: {:#?}", category, features::system::process());
+                        print(category, features::system::process());
                     }
                     cli::LogSetting::SystemTemperature => {
-                        info!("{}: {:#?}", category, features::system::temperature());
+                        print(category, features::system::temperature());
                     }
                     cli::LogSetting::SystemUnixTimeSeconds => {
-                        info!("{}: {:#?}", category, features::system::unix_time_seconds());
+                        print(category, features::system::unix_time_seconds());
                     }
                 }
             }
