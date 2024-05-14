@@ -29,7 +29,7 @@ jobs:
 
   build-x86_64:
     needs: check
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-20.04 # allow usage with older libc
     steps:
     - uses: actions/checkout@master
     - uses: actions-rs/toolchain@v1.0.1
