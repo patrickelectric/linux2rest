@@ -1869,7 +1869,7 @@ checksum = "01cda141df6706de531b6c46c3a33ecca755538219bd484262fa09410c13539c"
 
 [[package]]
 name = "linux2rest"
-version = "0.5.4"
+version = "0.5.6"
 dependencies = [
  "actix",
  "actix-web 3.3.3",
