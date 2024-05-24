@@ -1,0 +1,6 @@
+[build]
+pre-build = [
+    "dpkg --add-architecture $CROSS_DEB_ARCH",
+    "apt-get update && apt-get --assume-yes install pkg-config:$CROSS_DEB_ARCH libudev-dev:$CROSS_DEB_ARCH libssl-dev:$CROSS_DEB_ARCH openssl:$CROSS_DEB_ARCH",
+    "apt-get update && apt-get --assume-yes install pkg-config libudev-dev libssl-dev openssl"
+]
