@@ -182,6 +182,16 @@ pub async fn platform(req: HttpRequest) -> HttpResponse {
     }
 }
 
+#[api_v2_operation]
+/// Provide hardware model information
+pub async fn model(req: HttpRequest) -> HttpResponse {
+    debug!("{:#?}", req);
+
+    HttpResponse::Ok()
+        .content_type("application/json")
+        .body(serde_json::to_string_pretty(&features::model::HardwareModel::new()).unwrap())
+}
+
 pub fn websocket_kernel_buffer(req: HttpRequest, stream: web::Payload) -> HttpResponse {
     debug!("{:#?}", req);
 

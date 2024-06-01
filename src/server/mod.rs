@@ -22,6 +22,7 @@ pub fn run(server_address: &str) {
                 web::get().to(pages::root),
             )
             .route("/kernel_buffer", web::get().to(pages::kernel_buffer))
+            .route("/model", web::get().to(pages::model))
             .route("/netstat", web::get().to(pages::netstat))
             .route("/platform", web::get().to(pages::platform))
             .route("/serial", web::get().to(pages::serial))
