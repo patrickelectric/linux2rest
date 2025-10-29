@@ -10,8 +10,8 @@ jobs:
 
       - name: Setup toolchain for wasm
         run: |
-          rustup update 1.87.0
-          rustup default 1.87.0
+          rustup update 1.90.0
+          rustup default 1.90.0
           rustup set profile minimal
       - name: Check tag with toml
         if: ${{ github.event_name == 'push' && startsWith(github.ref, 'refs/tags/')}}
@@ -52,8 +52,8 @@ jobs:
     - uses: actions/checkout@master
     - name: Setup toolchain for wasm
       run: |
-        rustup update 1.87.0
-        rustup default 1.87.0
+        rustup update 1.90.0
+        rustup default 1.90.0
         rustup set profile minimal
     - uses: actions-rs/cargo@v1
       with:
