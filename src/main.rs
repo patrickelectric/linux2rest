@@ -14,10 +14,21 @@ use tracing::*;
 async fn main() {
     logger::init();
 
-    while let Err(error) = zenoh::init().await {
-        error!("Failed to initialize zenoh: {error}");
-        tokio::time::sleep(std::time::Duration::from_secs(5)).await;
-    }
+    // Initialize Zenoh in background - don't block server startup
+    tokio::spawn(async {
+        loop {
+            match zenoh::init().await {
+                Ok(_) => {
+                    info!("Zenoh initialized successfully");
+                    break;
+                }
+                Err(error) => {
+                    error!("Failed to initialize zenoh: {error}, retrying in 5 seconds...");
+                    tokio::time::sleep(std::time::Duration::from_secs(5)).await;
+                }
+            }
+        }
+    });
 
     features::platform::start();
     recorder::start();
