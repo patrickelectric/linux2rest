@@ -1,3 +1,4 @@
+pub mod common;
 pub mod journal;
 pub mod journal_websocket;
 pub mod kernel;
@@ -8,3 +9,4 @@ pub mod platform;
 pub mod serial;
 pub mod system;
 pub mod udev;
+pub mod usb;

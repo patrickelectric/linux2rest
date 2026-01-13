@@ -5,32 +5,6 @@ use serde::Serialize;
 use tracing::*;
 
 #[derive(Clone, Debug, Serialize, Apiv2Schema)]
-pub struct UsbPortInfo {
-    /// Vendor ID
-    pub vid: u16,
-    /// Product ID
-    pub pid: u16,
-    /// Serial number (arbitrary string)
-    pub serial_number: Option<String>,
-    /// Manufacturer (arbitrary string)
-    pub manufacturer: Option<String>,
-    /// Product name (arbitrary string)
-    pub product: Option<String>,
-}
-
-impl UsbPortInfo {
-    fn from(usb_port_info: &serialport::UsbPortInfo) -> Self {
-        UsbPortInfo {
-            vid: usb_port_info.vid,
-            pid: usb_port_info.pid,
-            serial_number: usb_port_info.serial_number.clone(),
-            manufacturer: usb_port_info.manufacturer.clone(),
-            product: usb_port_info.product.clone(),
-        }
-    }
-}
-
-#[derive(Clone, Debug, Serialize, Apiv2Schema)]
 pub struct PortInfo {
     /// The short name of the serial port
     pub name: String,

@@ -673,6 +673,93 @@
           width: 100%;
         }
       }
+
+      .btn.secondary.active {
+        background: rgba(56, 189, 248, 0.25);
+        border-color: rgba(56, 189, 248, 0.5);
+      }
+
+      .usb-tree {
+        padding: 1rem;
+        font-family: "JetBrains Mono", monospace;
+        font-size: 0.85rem;
+      }
+
+      .usb-tree-node {
+        border-left: 1px dashed rgba(148, 163, 184, 0.3);
+        margin-left: 0.5rem;
+      }
+
+      .usb-tree-node:first-child {
+        border-left: none;
+        margin-left: 0;
+      }
+
+      .usb-tree-item {
+        display: flex;
+        align-items: center;
+        flex-wrap: wrap;
+        gap: 0.5rem;
+        padding: 0.6rem 0.8rem;
+        margin: 0.25rem 0;
+        border-radius: var(--radius-sm);
+        background: rgba(148, 163, 184, 0.06);
+        border: 1px solid transparent;
+        transition: all 0.15s ease;
+      }
+
+      .usb-tree-item:hover {
+        background: rgba(56, 189, 248, 0.1);
+        border-color: rgba(56, 189, 248, 0.2);
+      }
+
+      .usb-tree-item.is-hub {
+        background: rgba(56, 189, 248, 0.12);
+        border-color: rgba(56, 189, 248, 0.25);
+      }
+
+      .usb-tree-item.is-root {
+        background: linear-gradient(135deg, rgba(56, 189, 248, 0.15), rgba(14, 165, 233, 0.2));
+        border-color: rgba(56, 189, 248, 0.35);
+      }
+
+      .usb-tree-icon {
+        font-size: 1rem;
+        min-width: 1.2rem;
+        text-align: center;
+      }
+
+      .usb-tree-port {
+        color: var(--highlight);
+        font-weight: 600;
+      }
+
+      .usb-tree-name {
+        color: var(--text-primary);
+        font-weight: 500;
+      }
+
+      .usb-tree-manufacturer {
+        color: var(--text-secondary);
+        font-size: 0.8rem;
+      }
+
+      .usb-tree-vidpid {
+        font-size: 0.75rem;
+        padding: 0.2rem 0.5rem;
+        background: rgba(8, 12, 24, 0.6);
+        border-radius: 4px;
+        color: var(--text-secondary);
+      }
+
+      .usb-tree-speed {
+        margin-left: auto;
+        font-size: 0.75rem;
+        color: var(--text-secondary);
+        padding: 0.2rem 0.6rem;
+        background: rgba(148, 163, 184, 0.1);
+        border-radius: 999px;
+      }
     </style>
   </head>
   <body>
@@ -718,7 +805,7 @@
       const app = Vue.createApp({
         data() {
           return {
-            tabs: ["netstat", "system", "journal", "kernel", "udev", "platform"],
+            tabs: ["netstat", "system", "usb", "journal", "kernel", "udev", "platform"],
             current_tab: "system",
           };
         },
@@ -843,6 +930,258 @@
                       >
                         <td>{{ formatPids(udp.pids) }}</td>
                         <td>{{ udp.local.address }}:{{ udp.local.port }}</td>
+                      </tr>
+                    </tbody>
+                  </table>
+                </div>
+              </article>
+            </div>
+          </section>
+        `,
+      });
+
+      app.component("usb-tree-node", {
+        props: ["node", "depth", "formatVidPid", "deviceClassName"],
+        computed: {
+          indent() {
+            return { paddingLeft: (this.depth * 1.5) + "rem" };
+          },
+          isHub() {
+            return this.node.device.device_class === 9;
+          },
+          isRootHub() {
+            return this.node.device.port_path && this.node.device.port_path.endsWith("-0");
+          },
+          portNumber() {
+            const path = this.node.device.port_path || "";
+            if (this.isRootHub) return null;
+            const parts = path.split(/[-\.]/);
+            return parts[parts.length - 1];
+          },
+        },
+        template: `
+          <div class="usb-tree-node" :style="indent">
+            <div class="usb-tree-item" :class="{ 'is-hub': isHub, 'is-root': isRootHub }">
+              <span class="usb-tree-icon">{{ isHub ? (isRootHub ? '&#x1F5A5;' : '&#x1F517;') : '&#x25CF;' }}</span>
+              <span class="usb-tree-port" v-if="portNumber">Port {{ portNumber }}:</span>
+              <span class="usb-tree-name">{{ node.device.product || 'Unknown Device' }}</span>
+              <span class="usb-tree-manufacturer" v-if="node.device.manufacturer">({{ node.device.manufacturer }})</span>
+              <code class="usb-tree-vidpid">{{ formatVidPid(node.device.vid, node.device.pid) }}</code>
+              <span class="usb-tree-speed">{{ node.device.speed }}</span>
+            </div>
+            <usb-tree-node
+              v-for="child in node.children"
+              :key="child.device.port_path"
+              :node="child"
+              :depth="depth + 1"
+              :formatVidPid="formatVidPid"
+              :deviceClassName="deviceClassName"
+            />
+          </div>
+        `,
+      });
+
+      app.component("tab-usb", {
+        created() {
+          const content = cache["usb"];
+          if (content) {
+            this.data = content;
+            return;
+          }
+          this.updateData();
+        },
+        data() {
+          return {
+            data: "Loading...",
+            viewMode: "tree",
+          };
+        },
+        computed: {
+          payload() {
+            return typeof this.data === "string" ? null : this.data;
+          },
+          devices() {
+            if (!this.payload || !Array.isArray(this.payload.devices)) {
+              return [];
+            }
+            return [...this.payload.devices].sort((a, b) => {
+              const busA = a.bus_number || 0;
+              const busB = b.bus_number || 0;
+              if (busA !== busB) return busA - busB;
+              const addrA = a.device_address || 0;
+              const addrB = b.device_address || 0;
+              return addrA - addrB;
+            });
+          },
+          deviceTree() {
+            if (!this.devices.length) return [];
+
+            // Build a map of port_path -> device
+            const deviceMap = new Map();
+            for (const device of this.devices) {
+              if (device.port_path) {
+                deviceMap.set(device.port_path, { device, children: [] });
+              }
+            }
+
+            // Build tree by finding parent for each device
+            const roots = [];
+            for (const [path, node] of deviceMap) {
+              const parentPath = this.getParentPath(path);
+              if (parentPath && deviceMap.has(parentPath)) {
+                deviceMap.get(parentPath).children.push(node);
+              } else {
+                roots.push(node);
+              }
+            }
+
+            // Sort children by port number
+            const sortChildren = (node) => {
+              node.children.sort((a, b) => {
+                const pathA = a.device.port_path || "";
+                const pathB = b.device.port_path || "";
+                return pathA.localeCompare(pathB, undefined, { numeric: true });
+              });
+              node.children.forEach(sortChildren);
+            };
+            roots.forEach(sortChildren);
+
+            // Sort roots by bus number
+            roots.sort((a, b) => (a.device.bus_number || 0) - (b.device.bus_number || 0));
+
+            return roots;
+          },
+        },
+        methods: {
+          async updateData() {
+            this.data = "Loading...";
+            try {
+              const payload = await request("usb");
+              this.data = payload;
+              cache["usb"] = payload;
+            } catch (error) {
+              console.error(error);
+              this.data = "Unable to load data";
+            }
+          },
+          getParentPath(path) {
+            // "1-0" -> null (root hub)
+            // "1-2" -> "1-0" (device on root hub)
+            // "1-2.1" -> "1-2" (device on hub)
+            // "1-2.1.3" -> "1-2.1" (device on nested hub)
+            if (!path) return null;
+            if (path.endsWith("-0")) return null;
+
+            const dotIndex = path.lastIndexOf(".");
+            if (dotIndex !== -1) {
+              return path.substring(0, dotIndex);
+            }
+
+            // No dot means direct child of root hub
+            const dashIndex = path.indexOf("-");
+            if (dashIndex !== -1) {
+              return path.substring(0, dashIndex) + "-0";
+            }
+
+            return null;
+          },
+          formatVidPid(vid, pid) {
+            const vidHex = vid.toString(16).padStart(4, "0");
+            const pidHex = pid.toString(16).padStart(4, "0");
+            return `${vidHex}:${pidHex}`;
+          },
+          deviceClassName(classCode) {
+            const classes = {
+              0: "Composite",
+              1: "Audio",
+              2: "CDC",
+              3: "HID",
+              5: "Physical",
+              6: "Image",
+              7: "Printer",
+              8: "Mass Storage",
+              9: "Hub",
+              10: "CDC Data",
+              11: "Smart Card",
+              13: "Content Security",
+              14: "Video",
+              15: "Healthcare",
+              16: "Audio/Video",
+              17: "Billboard",
+              18: "USB-C Bridge",
+              220: "Diagnostic",
+              224: "Wireless",
+              239: "Miscellaneous",
+              254: "Application",
+              255: "Vendor Specific",
+            };
+            return classes[classCode] || `Class ${classCode}`;
+          },
+        },
+        template: `
+          <section class="panel">
+            <header class="panel-header">
+              <div>
+                <h1>USB Devices</h1>
+                <p>Enumerate connected USB devices with port topology information.</p>
+              </div>
+              <div class="header-actions">
+                <button class="btn secondary" :class="{ active: viewMode === 'tree' }" @click="viewMode = 'tree'">Tree</button>
+                <button class="btn secondary" :class="{ active: viewMode === 'table' }" @click="viewMode = 'table'">Table</button>
+                <button class="btn" @click="updateData">Refresh</button>
+              </div>
+            </header>
+            <div v-if="!payload" class="empty-state">{{ data }}</div>
+            <div v-else-if="!devices.length" class="empty-state">No USB devices found.</div>
+            <div v-else class="panel-body">
+              <article class="card" v-if="viewMode === 'tree'">
+                <div class="card-header">
+                  <h2>Connection Topology</h2>
+                  <p>{{ devices.length }} device{{ devices.length === 1 ? '' : 's' }} across {{ deviceTree.length }} bus{{ deviceTree.length === 1 ? '' : 'es' }}</p>
+                </div>
+                <div class="usb-tree">
+                  <usb-tree-node
+                    v-for="root in deviceTree"
+                    :key="root.device.port_path"
+                    :node="root"
+                    :depth="0"
+                    :formatVidPid="formatVidPid"
+                    :deviceClassName="deviceClassName"
+                  />
+                </div>
+              </article>
+              <article class="card" v-if="viewMode === 'table'">
+                <div class="card-header">
+                  <h2>Device List</h2>
+                  <p>{{ devices.length }} device{{ devices.length === 1 ? '' : 's' }} found</p>
+                </div>
+                <div class="table-wrapper">
+                  <table class="data-table">
+                    <thead>
+                      <tr>
+                        <th>Port Path</th>
+                        <th>VID:PID</th>
+                        <th>Device</th>
+                        <th>Class</th>
+                        <th>USB Version</th>
+                        <th>Speed</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      <tr v-for="device in devices" :key="device.port_path || (device.bus_number + '-' + device.device_address)">
+                        <td>
+                          <code>{{ device.port_path || 'N/A' }}</code>
+                          <div class="metric-sub">Bus {{ device.bus_number }}, Addr {{ device.device_address }}</div>
+                        </td>
+                        <td><code>{{ formatVidPid(device.vid, device.pid) }}</code></td>
+                        <td>
+                          <div>{{ device.product || 'Unknown Device' }}</div>
+                          <div class="metric-sub" v-if="device.manufacturer">{{ device.manufacturer }}</div>
+                          <div class="metric-sub" v-if="device.serial_number">S/N: {{ device.serial_number }}</div>
+                        </td>
+                        <td>{{ deviceClassName(device.device_class) }}</td>
+                        <td>{{ device.usb_version }}</td>
+                        <td>{{ device.speed }}</td>
                       </tr>
                     </tbody>
                   </table>

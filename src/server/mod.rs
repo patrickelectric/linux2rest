@@ -27,6 +27,7 @@ pub fn run(server_address: &str) {
             .route("/netstat", web::get().to(pages::netstat))
             .route("/platform", web::get().to(pages::platform))
             .route("/serial", web::get().to(pages::serial))
+            .route("/usb", web::get().to(pages::usb))
             .route("/system", web::get().to(pages::system))
             .route("/system/cpu", web::get().to(pages::system_cpu))
             .route("/system/disk", web::get().to(pages::system_disk))

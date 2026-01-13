@@ -37,6 +37,8 @@ udev = "0.6"
 strum = { version = "0.26", features = ["derive"] }
 strum_macros = "0.26"
 zenoh = "1.6.2"
+rusb = { version = "0.9.4", features = ["vendored"] }
+usb-ids = "1.2025.2"
 
 
 [build-dependencies]

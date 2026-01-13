@@ -102,6 +102,14 @@ pub async fn serial(
 }
 
 #[api_v2_operation]
+/// Provides information about USB devices connected to the system
+pub async fn usb(req: HttpRequest) -> Json<features::usb::UsbDevices> {
+    debug!("{:#?}", req);
+
+    Json(features::usb::usb_devices())
+}
+
+#[api_v2_operation]
 /// Provides system information: cpu, disk, operating system, memory, network, processes, sensors
 pub async fn system(req: HttpRequest) -> Json<features::system::System> {
     debug!("{:#?}", req);
