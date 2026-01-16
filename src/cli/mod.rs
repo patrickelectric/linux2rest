@@ -18,6 +18,7 @@ pub enum LogSetting {
     Process,
     Temperature,
     UnixTimeSeconds,
+    Usb,
 }
 
 #[derive(Debug, StructOpt)]
@@ -103,6 +104,7 @@ fn validate_interval(key: &LogSetting, val: u64) -> Result<()> {
         | LogSetting::Cpu
         | LogSetting::Memory
         | LogSetting::Network
+        | LogSetting::Usb
             if val < 10 =>
         {
             Err(anyhow!(

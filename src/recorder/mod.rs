@@ -92,6 +92,9 @@ pub fn start() {
                     cli::LogSetting::UnixTimeSeconds => {
                         serde_json::to_string(&features::system::unix_time_seconds()).unwrap()
                     }
+                    cli::LogSetting::Usb => {
+                        serde_json::to_string(&features::usb::usb_devices()).unwrap()
+                    }
                 };
 
                 info!("Sending data to zenoh: {topic_name}: {data}");
