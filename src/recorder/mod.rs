@@ -24,7 +24,7 @@ pub fn start() {
     _spawn(module_path!().into(), async move {
         let mut counter: u64 = 0;
 
-        let zenoh_topic_name = "system_information/{}";
+        let zenoh_topic_name = "services/system_information/{}";
         loop {
             sleep(Duration::from_secs(1)).await;
 
