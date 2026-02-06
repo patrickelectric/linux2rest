@@ -14,6 +14,8 @@ use tracing::*;
 async fn main() {
     logger::init();
 
+    features::system::start(std::time::Duration::from_secs(5));
+
     while let Err(error) = zenoh::init().await {
         error!("Failed to initialize zenoh: {error}");
         tokio::time::sleep(std::time::Duration::from_secs(5)).await;
