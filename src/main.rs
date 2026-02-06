@@ -14,6 +14,8 @@ use tracing::*;
 async fn main() {
     logger::init();
 
+    features::system::start(std::time::Duration::from_secs(5));
+
     // Initialize Zenoh in background - don't block server startup
     tokio::spawn(async {
         loop {
