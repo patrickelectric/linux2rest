@@ -47,3 +47,8 @@ vergen = {version = "4", default-features = false, features = ["build", "git"]}
 
 [features]
 raspberry = ["notify", "rppal"]
+
+[profile.release]
+lto = true
+codegen-units = 1
+strip = true
