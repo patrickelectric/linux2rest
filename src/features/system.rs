@@ -248,6 +248,7 @@ impl Sampler {
 
     fn sample_and_send(&mut self) {
         self.system.refresh_memory();
+        self.system.refresh_cpu_all();
         self.system.refresh_processes_specifics(
             ProcessesToUpdate::All,
             true,
@@ -278,13 +279,12 @@ impl Sampler {
     }
 
     fn cpu(&self) -> Vec<Cpu> {
-        let global_usage = self.system.global_cpu_usage();
         self.system
             .cpus()
             .iter()
             .map(|cpu| Cpu {
                 name: cpu.name().into(),
-                usage: global_usage,
+                usage: cpu.cpu_usage(),
                 frequency: cpu.frequency(),
                 vendor_id: cpu.vendor_id().into(),
                 brand: cpu.brand().into(),
