@@ -5,45 +5,50 @@ authors = ["Patrick José Pereira <patrickelectric@gmail.com>"]
 edition = "2018"
 
 [dependencies]
-actix = "0.10"
-actix-web = "3.3"
-actix-web-actors = "3.0"
-anyhow = "1.0.80"
-cached = "0.38.0"
-chrono = { version = "0.4", features = ["serde"] }
-futures = "0.3"
-lazy_static = "1.4"
-serde = "1.0"
-serde_json = "1.0"
+actix = { version = "0.10", default-features = false }
+actix-web = { version = "3.3", default-features = false }
+actix-web-actors = { version = "3.0", default-features = false }
+anyhow = { version = "1.0.80", default-features = false, features = ["std"] }
+cached = { version = "0.38.0", default-features = false, features = ["proc_macro", "async"] }
+chrono = { version = "0.4", default-features = false, features = ["serde", "std", "clock"] }
+futures = { version = "0.3", default-features = false, features = ["std", "async-await"] }
+lazy_static = { version = "1.4", default-features = false }
+serde = { version = "1.0", default-features = false, features = ["derive"] }
+serde_json = { version = "1.0", default-features = false, features = ["std"] }
 structopt = { version = "0.3", default-features = false }
-tokio = "1"
-tracing = { version = "0.1.40", features = ["log", "async-await"] }
-tracing-subscriber = { version = "0.3.18", features = ["env-filter"] }
-tracing-log = "0.2.0"
-tracing-actix-web = "0.7.9"
-tracing-tracy = { version = "0.10.5", features = ["ondemand", "broadcast"] } # Note that these features defines the tracy client behavior.
+tokio = { version = "1", default-features = false, features = ["rt", "rt-multi-thread", "sync", "net", "time", "macros", "io-util"] }
+tracing = { version = "0.1.40", default-features = false, features = ["log", "async-await", "std"] }
+tracing-subscriber = { version = "0.3.18", default-features = false, features = ["env-filter", "std", "fmt", "registry", "ansi"] }
+tracing-log = { version = "0.2.0", default-features = false }
+tracing-actix-web = { version = "0.7.9", default-features = false }
+tracing-tracy = { version = "0.10.5", default-features = false, features = ["ondemand", "broadcast"] } # Note that these features defines the tracy client behavior.
 
 #Features
-netstat2 = "0.11.1"
-paperclip = { version = "0.6.1", features = ["actix", "chrono", "swagger-ui", "url"] }
-pnet = "0.34.0"
-notify = { version = "4.0", optional = true }
-rmesg = { version = "1.0.14", features = ["extra-traits", "sync"] }
-rppal = { version = "0.22.1", optional = true }
-serialport = {version = "4.2.0", features = ["serde"]}
-sinais = "0.1.0"
-sysinfo = "0.38.0"
-udev = "0.6"
-strum = { version = "0.26", features = ["derive"] }
-strum_macros = "0.26"
-zenoh = "1.6.2"
-rusb = { version = "0.9.4", features = ["vendored"] }
-usb-ids = "1.2025.2"
+netstat2 = { version = "0.11.1", default-features = false }
+paperclip = { version = "0.6.1", default-features = false, features = ["actix", "chrono", "swagger-ui", "url"] }
+pnet = { version = "0.34.0", default-features = false, features = ["std"] }
+notify = { version = "4.0", optional = true, default-features = false }
+rmesg = { version = "1.0.14", default-features = false, features = ["extra-traits", "sync"] }
+rppal = { version = "0.22.1", optional = true, default-features = false }
+serialport = { version = "4.2.0", default-features = false, features = ["serde"] }
+sinais = { version = "0.1.0", default-features = false }
+sysinfo = { version = "0.38.0", default-features = false, features = ["component", "disk", "network", "system"] }
+udev = { version = "0.6", default-features = false }
+strum = { version = "0.26", default-features = false, features = ["derive", "std"] }
+strum_macros = { version = "0.26", default-features = false }
+zenoh = { version = "1.6.2", default-features = true }
+rusb = { version = "0.9.4", default-features = false, features = ["vendored"] }
+usb-ids = { version = "1.2025.2", default-features = false }
 
 
 [build-dependencies]
-reqwest = {version = "0.11", features = ["blocking"]}
-vergen = {version = "4", default-features = false, features = ["build", "git"]}
+reqwest = { version = "0.11", default-features = false, features = ["blocking", "rustls-tls"] }
+vergen = { version = "4", default-features = false, features = ["build", "git"] }
 
 [features]
 raspberry = ["notify", "rppal"]
+
+[profile.release]
+lto = true
+codegen-units = 1
+strip = true
