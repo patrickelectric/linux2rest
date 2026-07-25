@@ -26,7 +26,6 @@ pub async fn init() -> Result<()> {
             let routers = info
                 .routers_zid()
                 .await
-                .map(|zid| zid)
                 .collect::<Vec<ZenohId>>();
 
             info!("Zenoh Session started with zid: {zid:?}, routers: {routers:?}",);
