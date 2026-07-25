@@ -1,11 +1,19 @@
+use std::collections::HashMap;
+
 use crate::cli;
 use crate::features;
-use crate::zenoh as zenoh_mod;
+use crate::zenoh::{self as zenoh_mod, publisher::Publisher};
 
 use serde::Serialize;
 use sinais::_spawn;
 use tokio::time::{sleep, Duration};
 use tracing::*;
+
+struct Publishers {
+    kernel: Publisher,
+    journal: Publisher,
+    categories: HashMap<cli::LogSetting, Publisher>,
+}
 
 pub fn print<T: Serialize>(category: &cli::LogSetting, data: T) {
     let json = serde_json::to_string(&data).unwrap();
@@ -23,32 +31,42 @@ pub fn start() {
 
     _spawn(module_path!().into(), async move {
         let mut counter: u64 = 0;
+        let mut publishers: Option<Publishers> = None;
+        let topic = |name: &str| format!("services/system_information/{name}");
 
-        let zenoh_topic_name = "services/system_information/{}";
         loop {
             sleep(Duration::from_secs(1)).await;
 
-            let Some(zenoh_session) = zenoh_mod::get() else {
-                error!("Zenoh session not found");
-                continue;
-            };
+            if publishers.is_none() {
+                let Some(session) = zenoh_mod::get() else {
+                    error!("Zenoh session not found");
+                    continue;
+                };
+                let mut category_pubs = HashMap::new();
+                for category in categories.keys() {
+                    let name = category.to_string().replace('-', "_");
+                    category_pubs.insert(
+                        category.clone(),
+                        Publisher::declare(&session, topic(&name), encoding.clone()).await,
+                    );
+                }
+                publishers = Some(Publishers {
+                    kernel: Publisher::declare(&session, topic("kernel"), encoding.clone()).await,
+                    journal: Publisher::declare(&session, topic("journal"), encoding.clone()).await,
+                    categories: category_pubs,
+                });
+            }
+
+            let publishers = publishers.as_ref().unwrap();
 
             while let Ok(Some(message)) = kernel_client.try_next() {
                 info!("Sending kernel message to zenoh: {message}");
-                zenoh_session
-                    .put(zenoh_topic_name.replace("{}", "kernel"), message)
-                    .encoding(zenoh::bytes::Encoding::APPLICATION_JSON)
-                    .await
-                    .unwrap();
+                publishers.kernel.put(message).await;
             }
 
             while let Ok(Some(message)) = journal_client.try_next() {
                 info!("Sending journal message to zenoh: {message}");
-                zenoh_session
-                    .put(zenoh_topic_name.replace("{}", "journal"), message)
-                    .encoding(zenoh::bytes::Encoding::APPLICATION_JSON)
-                    .await
-                    .unwrap();
+                publishers.journal.put(message).await;
             }
 
             for (category, interval) in categories.iter() {
@@ -56,8 +74,10 @@ pub fn start() {
                     continue;
                 }
 
-                let topic_name =
-                    zenoh_topic_name.replace("{}", &category.to_string().replace("-", "_"));
+                let Some(publisher) = publishers.categories.get(category) else {
+                    continue;
+                };
+
                 let data = match category {
                     cli::LogSetting::Netstat => {
                         serde_json::to_string(&features::netstat::netstat()).unwrap()
@@ -97,13 +117,8 @@ pub fn start() {
                     }
                 };
 
-                info!("Sending data to zenoh: {topic_name}: {data}");
-
-                zenoh_session
-                    .put(topic_name, data)
-                    .encoding(zenoh::bytes::Encoding::APPLICATION_JSON)
-                    .await
-                    .unwrap();
+                info!("Sending data to zenoh: {}: {data}", publisher.key_expr());
+                publisher.put(data).await;
             }
 
             counter += 1;
