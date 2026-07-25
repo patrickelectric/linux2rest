@@ -1,3 +1,5 @@
+pub mod publisher;
+
 use anyhow::{anyhow, Result};
 use tokio::sync::OnceCell;
 use tracing::*;
