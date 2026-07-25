@@ -33,6 +33,7 @@ pub fn start() {
         let mut counter: u64 = 0;
         let mut publishers: Option<Publishers> = None;
         let topic = |name: &str| format!("services/system_information/{name}");
+        let encoding = zenoh::bytes::Encoding::APPLICATION_JSON;
 
         loop {
             sleep(Duration::from_secs(1)).await;
@@ -70,7 +71,7 @@ pub fn start() {
             }
 
             for (category, interval) in categories.iter() {
-                if counter % interval != 0 {
+                if !counter.is_multiple_of(*interval) {
                     continue;
                 }
 
@@ -82,9 +83,13 @@ pub fn start() {
                     cli::LogSetting::Netstat => {
                         serde_json::to_string(&features::netstat::netstat()).unwrap()
                     }
-                    cli::LogSetting::Platform => {
-                        serde_json::to_string(&features::platform::platform()).unwrap()
-                    }
+                    cli::LogSetting::Platform => match features::platform::platform() {
+                        Ok(platform) => serde_json::to_string(&platform).unwrap(),
+                        Err(error) => {
+                            warn!("Skipping platform zenoh publish: {error}");
+                            continue;
+                        }
+                    },
                     cli::LogSetting::SerialPorts => {
                         serde_json::to_string(&features::serial::serial(None)).unwrap()
                     }
