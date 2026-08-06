@@ -7,7 +7,8 @@ mod logger;
 mod recorder;
 mod server;
 
-fn main() {
+#[tokio::main(flavor = "multi_thread")]
+async fn main() {
     logger::init();
 
     features::system::start(std::time::Duration::from_secs(5));
